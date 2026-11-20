@@ -8,6 +8,20 @@ Updates mit Rückfall) und UGOS (Freigaben, Time Machine, Dateimanager, Schnapps
 - Verbindliche Schnittstellen: `docs/schnittstellen.md`
 - Abweichungen/offene Punkte aus dem Bau: `docs/abweichungen.md`
 
+## Screenshots
+
+*Aufgenommen in einer lokalen Wegwerf-Instanz mit erfundenen Beispieldaten (Nutzer „alex“, „kim“, „sam“, freie Blender-Filme) – keine echten Konten, Dateien oder Adressen.*
+
+![Übersicht – Systemwerte live, Handlungsbedarf, Dienste](docs/screenshots/1-uebersicht.png)
+
+| Dateien | Freigaben |
+|---|---|
+| ![Dateien](docs/screenshots/2-dateien.png) | ![Freigaben](docs/screenshots/3-freigaben.png) |
+| **Nutzer, Rollen, 2FA** | **App-Katalog (Docker)** |
+| ![Nutzer](docs/screenshots/4-nutzer.png) | ![App-Katalog](docs/screenshots/5-apps-katalog.png) |
+
+<img src="docs/screenshots/6-handy.png" alt="Handy" width="260">
+
 ## Aufbau
 
 ```
