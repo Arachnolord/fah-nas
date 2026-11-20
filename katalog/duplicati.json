@@ -1,0 +1,81 @@
+{
+  "id": "duplicati",
+  "name": "Duplicati",
+  "beschreibung": "Verschlüsselte, inkrementelle Sicherungen auf lokale Ziele, Netzlaufwerke oder Cloud-Speicher (S3, OneDrive, Google Drive, WebDAV …) mit Zeitplan und Weboberfläche.",
+  "kategorie": "Sicherung",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/duplicati.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://docs.linuxserver.io/images/docker-duplicati/",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  duplicati:\n    image: lscr.io/linuxserver/duplicati:latest\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:8200\"\n    environment:\n      - PUID=${PUID}\n      - PGID=${PGID}\n      - TZ=${ZEITZONE}\n      - SETTINGS_ENCRYPTION_KEY=${SCHLUESSEL}\n      - DUPLICATI__WEBSERVICE_PASSWORD=${WEB_PASSWORT}\n    volumes:\n      - \"${PFAD_KONFIG}:/config\"\n      - \"${PFAD_ZIELE}:/backups\"\n      - \"${PFAD_QUELLE}:/source\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 8200,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "PUID",
+      "art": "variable",
+      "standard": "1000",
+      "beschriftung": "Nutzer-ID (PUID)",
+      "erklaerung": "Linux-Nutzer-ID, mit der die App auf Dateien zugreift. 1000 ist der übliche Standard; wenn die App auf Freigaben nicht schreiben darf, nimm die ID eines NAS-Nutzers mit Schreibrecht oder 0 (Verwaltungsrechte)."
+    },
+    {
+      "name": "PGID",
+      "art": "variable",
+      "standard": "1000",
+      "beschriftung": "Gruppen-ID (PGID)",
+      "erklaerung": "Linux-Gruppen-ID passend zur Nutzer-ID. Dateien, die die App anlegt, gehören dieser Gruppe."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "SCHLUESSEL",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Schlüssel für die Einstellungen",
+      "erklaerung": "Verschlüsselt die Einstellungsdatenbank von Duplicati (gespeicherte Zugangsdaten der Ziele). Beliebige Zeichenfolge, mindestens 8 Zeichen. Aufbewahren: ohne ihn sind die Einstellungen nach einer Neuinstallation nicht lesbar."
+    },
+    {
+      "name": "WEB_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Passwort der Weboberfläche",
+      "erklaerung": "Damit meldest du dich an der Weboberfläche an. Pflichtfeld – ohne Wert gilt das unsichere Standardpasswort „changeme“."
+    },
+    {
+      "name": "PFAD_KONFIG",
+      "art": "pfad",
+      "standard": "daten/config",
+      "beschriftung": "Konfigurationsordner",
+      "erklaerung": "Hier liegen Sicherungsdefinitionen und die lokale Datenbank. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    },
+    {
+      "name": "PFAD_ZIELE",
+      "art": "pfad",
+      "standard": "ziele",
+      "beschriftung": "Lokales Ziel",
+      "erklaerung": "Erscheint in Duplicati als /backups – für Sicherungen auf eine andere Platte oder ein externes Laufwerk."
+    },
+    {
+      "name": "PFAD_QUELLE",
+      "art": "pfad",
+      "standard": "quelle",
+      "beschriftung": "Zu sichernde Daten",
+      "erklaerung": "Erscheint in Duplicati als /source. Wähle die Freigabe mit den zu sichernden Daten (z. B. /data/shares/dokumente); der Standardordner im App-Verzeichnis ist leer."
+    }
+  ],
+  "hinweise": [
+    "Duplicati verpackt die Daten in verschlüsselte Blöcke – zum Wiederherstellen brauchst du Duplicati und die Passphrase der jeweiligen Sicherung."
+  ]
+}

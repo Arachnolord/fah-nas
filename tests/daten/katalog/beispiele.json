@@ -1,0 +1,36 @@
+{
+  "_hinweis": "Testdaten für tests/einheit/apps*.test.js und tests/integration/10_apps.sh: zwei Beispiel-Vorlagen im Format des eingebauten Katalogs (docs/superpowers/specs/2026-09-25-fahnas-apps-design.md §2). Nicht Teil des Release-Katalogs (katalog/ liefert Teil C2).",
+  "vorlagen": [
+    {
+      "id": "test-nginx",
+      "name": "Test-Webserver (nginx)",
+      "beschreibung": "Kleiner Webserver für Tests: liefert die Dateien aus dem gewählten Ordner aus.",
+      "kategorie": "Werkzeuge",
+      "symbol": "https://raw.githubusercontent.com/docker-library/docs/master/nginx/logo.png",
+      "quelle": "eingebaut",
+      "webui": "http://{HOST}:{PORT_WEB}",
+      "compose": "services:\n  web:\n    image: nginx:alpine\n    ports:\n      - \"${PORT_WEB}:80\"\n    volumes:\n      - \"${PFAD_HTML}:/usr/share/nginx/html:ro\"\n    restart: unless-stopped\n",
+      "felder": [
+        { "name": "PORT_WEB", "art": "port", "standard": 8080, "beschriftung": "Port der Weboberfläche", "erklaerung": "Auf diesem Port des NAS antwortet der Webserver. Muss frei sein." },
+        { "name": "PFAD_HTML", "art": "pfad", "standard": "daten/html", "beschriftung": "Ordner mit den Webseiten", "erklaerung": "Relativ zum App-Ordner oder eine Freigabe unter /data/shares. Wird nur gelesen." }
+      ]
+    },
+    {
+      "id": "test-uptime-kuma",
+      "name": "Uptime Kuma (Test)",
+      "beschreibung": "Überwacht Webseiten und Dienste und schlägt Alarm, wenn etwas ausfällt.",
+      "kategorie": "Überwachung",
+      "symbol": "https://raw.githubusercontent.com/louislam/uptime-kuma/master/public/icon.svg",
+      "quelle": "eingebaut",
+      "webui": "http://{HOST}:{PORT_WEB}",
+      "compose": "services:\n  app:\n    image: louislam/uptime-kuma:1\n    ports:\n      - \"${PORT_WEB}:3001\"\n    volumes:\n      - \"${PFAD_DATEN}:/app/data\"\n    environment:\n      - \"UPTIME_KUMA_DISABLE_FRAME_SAMEORIGIN=${RAHMEN_ERLAUBEN}\"\n      - \"LOGLEVEL=${PROTOKOLLSTUFE}\"\n      - \"ADMIN_TOKEN=${ADMIN_TOKEN}\"\n    restart: unless-stopped\n",
+      "felder": [
+        { "name": "PORT_WEB", "art": "port", "standard": 3001, "beschriftung": "Port der Weboberfläche", "erklaerung": "Auf diesem Port des NAS ist Uptime Kuma erreichbar." },
+        { "name": "PFAD_DATEN", "art": "pfad", "standard": "daten", "beschriftung": "Datenordner", "erklaerung": "Hier liegen Datenbank und Einstellungen von Uptime Kuma." },
+        { "name": "RAHMEN_ERLAUBEN", "art": "schalter", "standard": false, "an": "1", "aus": "0", "beschriftung": "Einbetten in fremde Seiten erlauben", "erklaerung": "Aus = sicherer Standard." },
+        { "name": "PROTOKOLLSTUFE", "art": "auswahl", "werte": ["info", "debug", "warn"], "standard": "info", "beschriftung": "Protokollstufe", "erklaerung": "Wie ausführlich die App protokolliert." },
+        { "name": "ADMIN_TOKEN", "art": "geheimnis", "pflicht": false, "beschriftung": "Admin-Token", "erklaerung": "Optionales Geheimnis; wird nur in der .env-Datei gespeichert." }
+      ]
+    }
+  ]
+}

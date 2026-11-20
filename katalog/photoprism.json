@@ -1,0 +1,91 @@
+{
+  "id": "photoprism",
+  "name": "PhotoPrism",
+  "beschreibung": "KI-gestützte Fotoverwaltung für eine vorhandene Ordnerstruktur: indexiert deine Originale an Ort und Stelle, erkennt Gesichter, Orte und Motive, mit MariaDB als Datenbank.",
+  "kategorie": "Fotos",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/photoprism.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://docs.photoprism.app/getting-started/docker-compose/",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  photoprism:\n    image: photoprism/photoprism:latest\n    restart: unless-stopped\n    stop_grace_period: 15s\n    depends_on:\n      - mariadb\n    ports:\n      - \"${PORT_WEB}:2342\"\n    environment:\n      - PHOTOPRISM_ADMIN_USER=admin\n      - PHOTOPRISM_ADMIN_PASSWORD=${ADMIN_PASSWORT}\n      - PHOTOPRISM_AUTH_MODE=password\n      - PHOTOPRISM_DEFAULT_LOCALE=de\n      - PHOTOPRISM_PLACES_LOCALE=local\n      - PHOTOPRISM_ORIGINALS_LIMIT=${ORIGINAL_LIMIT_MB}\n      - PHOTOPRISM_READONLY=${NUR_LESEN}\n      - PHOTOPRISM_DATABASE_DRIVER=mysql\n      - PHOTOPRISM_DATABASE_SERVER=mariadb:3306\n      - PHOTOPRISM_DATABASE_NAME=photoprism\n      - PHOTOPRISM_DATABASE_USER=photoprism\n      - PHOTOPRISM_DATABASE_PASSWORD=${DB_PASSWORT}\n    working_dir: /photoprism\n    volumes:\n      - \"${PFAD_ORIGINALE}:/photoprism/originals\"\n      - \"${PFAD_IMPORT}:/photoprism/import\"\n      - \"${PFAD_SPEICHER}:/photoprism/storage\"\n  mariadb:\n    image: mariadb:11.4\n    restart: unless-stopped\n    stop_grace_period: 15s\n    command: --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120\n    environment:\n      - MARIADB_AUTO_UPGRADE=1\n      - MARIADB_INITDB_SKIP_TZINFO=1\n      - MARIADB_DATABASE=photoprism\n      - MARIADB_USER=photoprism\n      - MARIADB_PASSWORD=${DB_PASSWORT}\n      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORT}\n    volumes:\n      - \"${PFAD_DB}:/var/lib/mysql\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 2342,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "ADMIN_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Admin-Passwort",
+      "erklaerung": "Passwort für den Nutzer admin beim ersten Start (8–72 Zeichen). Pflichtfeld – ohne Passwort startet PhotoPrism nicht."
+    },
+    {
+      "name": "ORIGINAL_LIMIT_MB",
+      "art": "variable",
+      "standard": "5000",
+      "beschriftung": "Größenlimit je Datei (MB)",
+      "erklaerung": "Größere Originale werden beim Indexieren übersprungen. 5000 MB reicht für fast alle Fotos und Handyvideos."
+    },
+    {
+      "name": "NUR_LESEN",
+      "art": "schalter",
+      "standard": false,
+      "beschriftung": "Originale nur lesen",
+      "erklaerung": "An = PhotoPrism ändert nichts im Originale-Ordner (kein Umbenennen, keine Sidecar-Dateien dort); Hochladen und Import sind dann aus."
+    },
+    {
+      "name": "DB_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Datenbank-Passwort",
+      "erklaerung": "Verbindet PhotoPrism mit MariaDB (nur intern zwischen den Containern). Beliebige Folge aus Buchstaben und Ziffern, mindestens 16 Zeichen – du musst sie dir nicht merken."
+    },
+    {
+      "name": "DB_ROOT_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "MariaDB-Root-Passwort",
+      "erklaerung": "Verwaltungspasswort der Datenbank (nur intern). Ebenfalls eine beliebige lange Zeichenfolge; wird nur bei Wartungsarbeiten an der Datenbank gebraucht."
+    },
+    {
+      "name": "PFAD_ORIGINALE",
+      "art": "pfad",
+      "standard": "fotos",
+      "beschriftung": "Originale",
+      "erklaerung": "Deine Fotosammlung (/photoprism/originals). Wähle die Foto-Freigabe (z. B. /data/shares/fotos); PhotoPrism indexiert die Dateien an Ort und Stelle."
+    },
+    {
+      "name": "PFAD_IMPORT",
+      "art": "pfad",
+      "standard": "import",
+      "beschriftung": "Importordner",
+      "erklaerung": "Dateien, die du hier ablegst, kann PhotoPrism sortiert in die Originale übernehmen (/photoprism/import)."
+    },
+    {
+      "name": "PFAD_SPEICHER",
+      "art": "pfad",
+      "standard": "daten/storage",
+      "beschriftung": "Speicher",
+      "erklaerung": "Zwischenspeicher, Vorschaubilder, Sidecar-Dateien und Datenbank-Sicherungen. Bleibt im App-Ordner."
+    },
+    {
+      "name": "PFAD_DB",
+      "art": "pfad",
+      "standard": "daten/mariadb",
+      "beschriftung": "Datenbankordner",
+      "erklaerung": "Dateien der MariaDB. Nie auf USB-Stick, SD-Karte oder Netzfreigabe legen."
+    }
+  ],
+  "hinweise": [
+    "PhotoPrism braucht beim Indexieren viel Speicher: mindestens 4 GB RAM (oder Swap) einplanen, sonst startet es immer wieder neu.",
+    "Anmeldung mit admin und dem gewählten Passwort. Standardsprache der Oberfläche ist Deutsch.",
+    "Die offizielle Vorlage schaltet seccomp und AppArmor ab (security_opt unconfined) – hier bewusst weggelassen, weil aktuelle Docker-Versionen das nicht mehr brauchen. Bei Fehlern mit ptrace/seccomp im Protokoll die Zeilen in der Compose-Datei ergänzen."
+  ]
+}

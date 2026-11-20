@@ -1,0 +1,47 @@
+/* ============================================================================
+   Erdacht und programmiert von Fabian Hammer, Deutschland.
+   (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+   ============================================================================
+   Anruf-Ebene (Plan 03): über der ganzen Oberfläche, verkleinerbar (unten rechts), Raster je Personenzahl,
+   Steuerleiste. Nur Variablen aus stil.css. Handy: vollflächig, Leiste unten fest, Knöpfe ≥ 48 px.
+   ============================================================================ */
+
+.anruf-ebene { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--fahnas-hintergrund); color: var(--fahnas-text); }
+.anruf-ebene-klein { inset: auto 16px 16px auto; width: 320px; height: 200px; padding: 6px; border: 1px solid var(--fahnas-rand); border-radius: var(--fahnas-radius); box-shadow: var(--fahnas-schatten); }
+.anruf-ebene-klein .anruf-leiste .anruf-knopf:not([data-knopf="mikrofon"]):not([data-knopf="auflegen"]) { display: none; }
+.anruf-ebene-klein .anruf-ebene-kopf .anruf-titel { font-size: 0.85rem; }
+.anruf-ebene-kopf { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.anruf-titel { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anruf-klein-knopf { min-width: 40px; min-height: 40px; }
+.anruf-raster { flex: 1 1 auto; min-height: 0; display: grid; gap: 8px; }
+.anruf-raster-1 { grid-template-columns: 1fr; }
+.anruf-raster-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.anruf-raster-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.anruf-raster-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.anruf-kachel { position: relative; min-height: 0; overflow: hidden; border-radius: var(--fahnas-radius); background: var(--fahnas-flaeche-2); display: flex; align-items: center; justify-content: center; }
+.anruf-kachel video { width: 100%; height: 100%; object-fit: cover; background: var(--fahnas-flaeche-2); }
+.anruf-kachel video.anruf-ohne-bild { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.anruf-eigen video { transform: scaleX(-1); }
+.anruf-kachel.anruf-getrennt { outline: 2px dashed var(--fahnas-warnung); }
+.anruf-initial { width: 72px; height: 72px; display: flex; font-size: 2rem; } /* Avatar (stil.css .avatar): Bild oder Buchstabe in der Farbe der Person */
+.anruf-unterschrift { position: absolute; left: 8px; bottom: 8px; display: flex; align-items: center; gap: 4px; max-width: calc(100% - 16px); padding: 2px 8px; border-radius: 999px; background: var(--fahnas-flaeche); color: var(--fahnas-text); font-size: 0.8rem; }
+.anruf-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anruf-mikro-aus { width: 14px; height: 14px; color: var(--fahnas-gefahr); flex: none; }
+.anruf-meldung { margin: 0; text-align: center; font-weight: 600; }
+.anruf-leiste { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.anruf-knopf { min-width: 44px; min-height: 44px; border-radius: 50%; }
+.anruf-auflegen { background: var(--fahnas-gefahr); color: var(--fahnas-gefahr-text); border-color: var(--fahnas-gefahr); }
+.anruf-geraete { max-width: 420px; }
+
+.klingeln-stapel { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 95; display: flex; flex-direction: column; gap: 8px; width: min(440px, calc(100vw - 32px)); }
+.klingeln { box-shadow: var(--fahnas-schatten); border: 2px solid var(--fahnas-akzent); }
+.klingeln-text { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-weight: 700; }
+.klingeln .knopf { min-height: 44px; }
+
+@media (max-width: 719px) {
+  .anruf-ebene-klein { inset: 0; width: auto; height: auto; padding: 12px; border: 0; border-radius: 0; }
+  .anruf-raster-2 { grid-template-columns: 1fr; }
+  .anruf-raster-4, .anruf-raster-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .anruf-leiste { position: sticky; bottom: 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); background: var(--fahnas-hintergrund); }
+  .anruf-knopf { min-width: 48px; min-height: 48px; }
+}

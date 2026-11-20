@@ -1,0 +1,44 @@
+{
+  "id": "gitea",
+  "name": "Gitea",
+  "beschreibung": "Leichter Git-Server mit Weboberfläche im Stil von GitHub: Repositories, Issues, Pull Requests, Wiki, Pakete und CI-Anbindung (Actions).",
+  "kategorie": "Entwicklung",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/gitea.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://docs.gitea.com/installation/install-with-docker",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  gitea:\n    image: docker.gitea.com/gitea:1.27\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:3000\"\n      - \"${PORT_SSH}:22\"\n    environment:\n      - USER_UID=1000\n      - USER_GID=1000\n      - TZ=${ZEITZONE}\n      - GITEA__server__SSH_PORT=${PORT_SSH}\n    volumes:\n      - \"${PFAD_DATEN}:/data\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 3000,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "PORT_SSH",
+      "art": "port",
+      "standard": 2222,
+      "beschriftung": "SSH-Port für Git",
+      "erklaerung": "Über diesen Port klonst und pushst du per SSH (git@nas:…). 22 ist meist vom NAS selbst belegt, daher 2222."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Repositories, Datenbank (SQLite), Konfiguration und Anhänge. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    }
+  ],
+  "hinweise": [
+    "Beim ersten Aufruf erscheint der Installationsassistent: SQLite als Datenbank reicht für den Heimgebrauch; das erste Konto wird Administrator."
+  ]
+}

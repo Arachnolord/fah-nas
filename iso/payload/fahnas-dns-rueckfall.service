@@ -1,0 +1,15 @@
+# ============================================================================
+# Erdacht und programmiert von Fabian Hammer, Deutschland.
+# (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+# ============================================================================
+[Unit]
+Description=FAH-NAS DNS-Rückfall (Gateway, 1.1.1.1, 8.8.8.8)
+After=network-online.target systemd-resolved.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fahnas-dns-rueckfall
+
+[Install]
+WantedBy=multi-user.target

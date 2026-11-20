@@ -1,0 +1,87 @@
+/* ============================================================================
+   Erdacht und programmiert von Fabian Hammer, Deutschland.
+   (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+   ============================================================================
+   System: Karten für Allgemein, Netz, Standort und Verbindungen, Dienste, Updates, Energie, S.M.A.R.T., Protokoll,
+   Export/Import, Über. */
+
+.sy-dienst { align-items: flex-start; }
+.sy-dienst-kopf { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.sy-dienst .erklaerung { margin: 2px 0 0; font-size: 0.85rem; color: var(--fahnas-text-schwach, #6b7280); }
+.sy-dienst-knoepfe { flex: 0 0 auto; }
+.sy-geaendert { font-weight: 700; color: var(--fahnas-akzent, #2563eb); }
+.sy-untertitel { margin: 0 0 6px; font-size: 1rem; }
+.sy-block { min-width: 0; }
+.sy-zweispaltig { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.sy-filter .vw-zeile { align-items: flex-end; }
+.sy-filter-knopf { flex: 0 0 auto; }
+.sy-seiten { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.sy-protokoll td { white-space: nowrap; }
+.sy-protokoll td:nth-child(5) { white-space: normal; min-width: 160px; }
+.sy-details-zeile td { padding-top: 0; }
+.sy-anleitung { white-space: pre-line; }
+.sy-platten { margin: 0; padding-left: 16px; }
+.sy-projekt { margin-top: 12px; }
+.sy-updates-ergebnis:empty { display: none; }
+.sy-programm-ergebnis:empty { display: none; }
+.sy-programm-ergebnis .vw-knopfleiste { margin-top: 8px; }
+.sy-programm-ausgabe { max-height: 320px; overflow: auto; white-space: pre-wrap; font-size: 0.85rem; }
+/* Standort und Verbindungen: Breite/Länge nebeneinander (Erklärtexte verschieden lang → oben bündig; doppelte Klasse, weil
+   verwaltung-hilfen.css mit .vw-zeile { align-items: flex-end } erst nach system.css geladen wird), Stand der Ortsdaten */
+.vw-zeile.sy-standort-zeile { align-items: flex-start; }
+.sy-standort-zeile > .vw-feld { flex: 1 1 180px; }
+.sy-standort .sy-einleitung { margin: 0 0 14px; }
+.sy-geo-stand { margin: -2px 0 12px; }
+@media (max-width: 480px) {
+  .sy-dienst { flex-direction: column; align-items: stretch; }
+  .sy-dienst-knoepfe { justify-content: flex-start; }
+}
+
+/* Aufklappbare Karte (Protokoll, 12.10.2026): zu = nur Titel + Hinweis, auf = Filter und Einträge */
+.sy-klappe > summary { cursor: pointer; }
+.sy-klappe > summary .vw-karte-titel { display: inline; margin: 0 8px 0 0; }
+.sy-klappe-hinweis { display: inline; }
+.sy-klappe[open] > summary { margin-bottom: 12px; }
+.sy-klappe[open] .sy-klappe-hinweis { display: none; }
+
+/* Zusätzliche Karten (Oktober 2026) */
+.sy-zusatz-abschnitt { margin: 14px 0 6px; font-size: 1rem; }
+.sy-zusatz-felder { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 0 14px; padding-left: 12px; border-left: 3px solid var(--fahnas-rand, #e5e7eb); margin-bottom: 8px; }
+.sy-meldungen { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+/* VPN (WireGuard) */
+.sy-vpn-dialog { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.sy-vpn-qr { width: min(100%, 300px); height: auto; background: #fff; padding: 8px; border-radius: 8px; image-rendering: pixelated; }
+/* ntfy einrichten (16.10.2026): QR-Code links, drei Schritte rechts; schmal untereinander */
+.sy-ntfy { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 12px; }
+.sy-ntfy-einrichten { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.sy-ntfy-qr-rahmen { flex: 0 0 auto; background: #fff; padding: 6px; border-radius: 8px; line-height: 0; }
+.sy-ntfy-qr { width: 168px; height: auto; image-rendering: pixelated; }
+.sy-ntfy-schritte { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 520px; }
+.sy-ntfy-thema { padding: 2px 6px; border-radius: 6px; background: var(--fahnas-flaeche-2); overflow-wrap: anywhere; }
+.sy-vpn-text { white-space: pre-wrap; word-break: break-all; font-size: 0.8rem; max-width: 100%; }
+.sy-vpn-schritte { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.sy-vpn-schritt { padding: 8px 10px; border-left: 3px solid var(--fahnas-rand, #e5e7eb); }
+.sy-vpn-schritt.sy-vpn-ok { border-left-color: var(--fahnas-erfolg, #16a34a); }
+.sy-vpn-schritt.sy-vpn-warnung { border-left-color: var(--fahnas-warnung, #d97706); }
+.sy-vpn-schritt.sy-vpn-fehler { border-left-color: var(--fahnas-gefahr, #c62828); }
+.sy-vpn-schritt-kopf { display: flex; align-items: center; gap: 8px; }
+.sy-vpn-schritt .erklaerung { margin: 4px 0 0; }
+.sy-vpn-tun { margin-top: 6px; padding: 6px 8px; background: var(--fahnas-flaeche-2, rgba(127,127,127,.08)); border-radius: 6px; }
+.sy-vpn-tun p { margin: 2px 0 0; white-space: pre-line; }
+/* Energie: Wochentage */
+.sy-tage { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.sy-tag { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; }
+.sy-proto-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 4px 0; }
+.sy-proto-zeile code { font-size: 0.8rem; word-break: break-all; }
+/* Sprungziel aus dem Dashboard kurz hervorheben */
+[data-karte] { scroll-margin-top: calc(var(--fahnas-kopf-hoehe) + 12px); }
+
+/* Reiter (12.10.2026): vier Bereiche statt 18 Karten untereinander, darunter die Karten des Reiters als Sprungknöpfe */
+.sy-reiter { display: flex; gap: 4px; margin: 0 0 10px; border-bottom: 1px solid var(--fahnas-rand); overflow-x: auto; scrollbar-width: none; }
+.sy-reiter::-webkit-scrollbar { display: none; }
+.sy-reiter-knopf { flex: 0 0 auto; background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; font: inherit; font-weight: 600; color: var(--fahnas-text-schwach); cursor: pointer; white-space: nowrap; min-height: 44px; }
+.sy-reiter-knopf:hover { color: var(--fahnas-text); }
+.sy-reiter-knopf[aria-selected="true"] { color: var(--fahnas-akzent-auf-hell); border-bottom-color: var(--fahnas-akzent); }
+.sy-unternav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+.sy-unternav-knopf { background: var(--fahnas-flaeche-2); border: 1px solid var(--fahnas-rand); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 0.85rem; color: var(--fahnas-text); cursor: pointer; min-height: 32px; }
+.sy-unternav-knopf:hover { border-color: var(--fahnas-akzent); }

@@ -1,0 +1,51 @@
+{
+  "id": "grafana",
+  "name": "Grafana",
+  "beschreibung": "Dashboards und Diagramme für Messwerte aus Prometheus, InfluxDB, SQL-Datenbanken und vielen weiteren Quellen – mit Alarmen und Freigaben.",
+  "kategorie": "Überwachung",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/grafana.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://grafana.com/docs/grafana/latest/setup-grafana/installation/docker/",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  grafana:\n    image: grafana/grafana-oss:latest\n    restart: unless-stopped\n    user: \"0:0\"\n    ports:\n      - \"${PORT_WEB}:3000\"\n    environment:\n      - TZ=${ZEITZONE}\n      - GF_SECURITY_ADMIN_USER=${ADMIN_NAME}\n      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORT}\n    volumes:\n      - \"${PFAD_DATEN}:/var/lib/grafana\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 3000,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "ADMIN_NAME",
+      "art": "variable",
+      "standard": "admin",
+      "beschriftung": "Admin-Benutzername",
+      "erklaerung": "Name des ersten Verwaltungskontos."
+    },
+    {
+      "name": "ADMIN_PASSWORT",
+      "art": "geheimnis",
+      "standard": "admin",
+      "beschriftung": "Admin-Passwort",
+      "erklaerung": "Startpasswort des Admin-Kontos (Grafana verlangt bei der ersten Anmeldung ein neues). Gilt nur beim ersten Start – später in Grafana ändern."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Datenbank, Dashboards, Plugins und Sitzungen. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    }
+  ],
+  "hinweise": [
+    "Die Vorlage startet den Container mit Verwaltungsrechten (user 0:0), damit der Datenordner beschreibbar ist; das Image läuft sonst als Nutzer 472."
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "id": "plex",
+  "name": "Plex Media Server",
+  "beschreibung": "Medienserver mit Apps für nahezu jedes Gerät, Fernzugriff über dein Plex-Konto und optionalem Plex Pass für Hardware-Transkodierung.",
+  "kategorie": "Medien",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/plex.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://github.com/plexinc/pms-docker",
+  "webui": "http://{HOST}:{PORT_WEB}/web",
+  "compose": "services:\n  plex:\n    image: plexinc/pms-docker:latest\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:32400/tcp\"\n    environment:\n      - TZ=${ZEITZONE}\n      - PLEX_CLAIM=${PLEX_CLAIM}\n    volumes:\n      - \"${PFAD_KONFIG}:/config\"\n      - \"${PFAD_TRANSCODE}:/transcode\"\n      - \"${PFAD_MEDIEN}:/data\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 32400,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "PLEX_CLAIM",
+      "art": "geheimnis",
+      "standard": "",
+      "beschriftung": "Claim-Token",
+      "erklaerung": "Verknüpft den Server beim ersten Start mit deinem Plex-Konto. Hol ihn kurz vor der Installation auf https://www.plex.tv/claim – er gilt nur 4 Minuten. Leer = Server ohne Konto anlegen (Einrichtung dann nur aus dem Heimnetz)."
+    },
+    {
+      "name": "PFAD_KONFIG",
+      "art": "pfad",
+      "standard": "daten/config",
+      "beschriftung": "Konfigurationsordner",
+      "erklaerung": "Hier liegen Datenbank, Einstellungen und Metadaten des Servers. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    },
+    {
+      "name": "PFAD_TRANSCODE",
+      "art": "pfad",
+      "standard": "daten/transcode",
+      "beschriftung": "Transkodier-Zwischenspeicher",
+      "erklaerung": "Temporäre Dateien beim Umwandeln von Videos. Braucht bei mehreren Streams einige GB."
+    },
+    {
+      "name": "PFAD_MEDIEN",
+      "art": "pfad",
+      "standard": "medien",
+      "beschriftung": "Medienordner",
+      "erklaerung": "Erscheint im Container als /data. Wähle deine Medien-Freigabe (z. B. /data/shares/medien) und lege in Plex Bibliotheken aus /data an."
+    }
+  ],
+  "hinweise": [
+    "DLNA und die automatische Erkennung im Heimnetz (GDM) brauchen zusätzliche Ports (1900/udp, 32410–32414/udp, 32469/tcp); Apps finden den Server über dein Plex-Konto auch ohne sie.",
+    "Hardware-Transkodierung braucht Plex Pass und das Gerät /dev/dri im Container."
+  ]
+}

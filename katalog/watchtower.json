@@ -1,0 +1,41 @@
+{
+  "id": "watchtower",
+  "name": "Watchtower",
+  "beschreibung": "Aktualisiert laufende Container automatisch, sobald ein neues Image erscheint – nach Zeitplan, mit Aufräumen alter Images. Ohne eigene Weboberfläche.",
+  "kategorie": "Verwaltung",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/watchtower.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://github.com/nicholas-fedor/watchtower",
+  "webui": null,
+  "compose": "services:\n  watchtower:\n    image: nickfedor/watchtower:latest\n    restart: unless-stopped\n    environment:\n      - TZ=${ZEITZONE}\n      - WATCHTOWER_CLEANUP=true\n      - WATCHTOWER_SCHEDULE=${ZEITPLAN}\n      - WATCHTOWER_LABEL_ENABLE=${NUR_MARKIERTE}\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n",
+  "felder": [
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "ZEITPLAN",
+      "art": "variable",
+      "standard": "0 0 4 * * *",
+      "beschriftung": "Zeitplan (Cron mit Sekunden)",
+      "erklaerung": "Wann nach Updates gesucht wird – sechs Felder: Sekunde Minute Stunde Tag Monat Wochentag. Standard: täglich um 4 Uhr."
+    },
+    {
+      "name": "NUR_MARKIERTE",
+      "art": "schalter",
+      "standard": false,
+      "beschriftung": "Nur markierte Container",
+      "erklaerung": "An = nur Container mit dem Label com.centurylinklabs.watchtower.enable=true werden aktualisiert. Aus = alle laufenden Container."
+    }
+  ],
+  "hinweise": [
+    "Das ursprüngliche Projekt containrrr/watchtower wurde im Dezember 2025 archiviert; diese Vorlage nutzt den gepflegten Fork nicholas-fedor/watchtower (gleiche Einstellungen).",
+    "Automatische Updates können Apps unbemerkt kaputt machen (neue Hauptversionen, geänderte Einstellungen). FAH-NAS bietet je App „Aktualisieren“ mit Sicherung des Datenordners – das ist der kontrolliertere Weg."
+  ],
+  "risiko": [
+    "Bindet /var/run/docker.sock ein: Die App darf damit alle Container auf dem NAS steuern und hat faktisch Verwaltungsrechte auf dem ganzen System. Nur installieren, wenn du der App vertraust, und die Weboberfläche nie ungeschützt ins Internet stellen. Watchtower stoppt, löscht und startet damit fremde Container."
+  ]
+}

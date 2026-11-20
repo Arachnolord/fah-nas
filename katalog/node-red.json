@@ -1,0 +1,38 @@
+{
+  "id": "node-red",
+  "name": "Node-RED",
+  "beschreibung": "Grafische Programmierung von Abläufen (Flows) per Drag-and-drop – verbindet MQTT, HTTP, Home Assistant, Datenbanken und Geräte.",
+  "kategorie": "Smart Home",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/node-red.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://nodered.org/docs/getting-started/docker",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  node-red:\n    image: nodered/node-red:latest\n    restart: unless-stopped\n    user: \"0:0\"\n    ports:\n      - \"${PORT_WEB}:1880\"\n    environment:\n      - TZ=${ZEITZONE}\n    volumes:\n      - \"${PFAD_DATEN}:/data\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 1880,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Flows, Zugangsdaten und nachinstallierte Knoten (Nodes). Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    }
+  ],
+  "hinweise": [
+    "Der Editor ist beim ersten Start ohne Anmeldung – unter settings.js (adminAuth) ein Passwort setzen, bevor du ihn im Netz erreichbar machst.",
+    "Die Vorlage startet den Container mit Verwaltungsrechten (user 0:0), damit der Datenordner beschreibbar ist; das Image erwartet sonst Besitzer 1000:1000."
+  ]
+}

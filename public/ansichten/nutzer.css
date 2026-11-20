@@ -1,0 +1,34 @@
+/* ============================================================================
+   Erdacht und programmiert von Fabian Hammer, Deutschland.
+   (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+   ============================================================================
+   Nutzer: Konto-Karte, Nutzertabelle, Gruppenliste, 2FA-Dialog mit QR-Code. */
+
+.nu-konto-zeile { margin: 0 0 10px; }
+.nu-konto-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.nu-konto-block { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.nu-konto-block .erklaerung { margin: 0; font-size: 0.85rem; color: var(--fahnas-text-schwach, #6b7280); }
+.nu-abmelden-regler { width: 100%; accent-color: var(--fahnas-akzent); }
+.nu-abmelden p { margin: 0; }
+.nu-totp-stand { margin: 0; }
+.nu-tabelle td { white-space: nowrap; }
+.nu-tabelle td.vw-aktionen { min-width: 340px; }
+.nu-tabelle tr.nu-gesperrt td:not(.vw-aktionen) { opacity: 0.6; }
+.nu-mitglieder { font-size: 0.85rem; overflow-wrap: anywhere; white-space: normal; }
+.nu-schritt { margin: 12px 0 4px; font-size: 1rem; }
+.nu-qr-rahmen { display: flex; justify-content: center; padding: 8px; background: #fff; border-radius: 8px; border: 1px solid var(--fahnas-rand, #cbd5e1); margin: 8px 0 12px; }
+.nu-qr { width: min(260px, 100%); height: auto; image-rendering: pixelated; }
+.nu-zeile { display: flex; gap: 8px; align-items: stretch; }
+.nu-zeile .vw-eingabe { flex: 1 1 auto; min-width: 0; }
+@media (max-width: 480px) {
+  /* Gruppenliste: Name samt Mitgliedern in voller Breite, Knöpfe darunter */
+  .nu-gruppen li { flex-wrap: wrap; }
+  .nu-gruppen li > .vw-liste-name { flex: 1 1 100%; }
+  .nu-gruppen li > .knopf { flex: 1 1 auto; }
+}
+/* Profilbild (0.22.0): Bild links, Erklärung und Knöpfe rechts; in der Liste das Bild vor dem Namen */
+.nu-avatar-block { display: flex; align-items: center; gap: 14px; margin: 10px 0 14px; }
+.nu-avatar-text { display: grid; gap: 6px; min-width: 0; }
+.nu-avatar-text .erklaerung { margin: 0; }
+.nu-avatar-knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+.nu-name-zelle { display: flex; align-items: center; gap: 8px; }

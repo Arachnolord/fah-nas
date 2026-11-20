@@ -1,0 +1,118 @@
+{
+  "id": "paperless-ngx",
+  "name": "Paperless-ngx",
+  "beschreibung": "Dokumentenverwaltung fürs papierlose Büro: Scans und PDFs werden per OCR durchsuchbar, automatisch verschlagwortet und Korrespondenten zugeordnet. Mit Valkey (Redis) als Warteschlange.",
+  "kategorie": "Dokumente",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/paperless-ngx.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://docs.paperless-ngx.com/setup/#docker",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  broker:\n    image: docker.io/valkey/valkey:9-alpine\n    restart: unless-stopped\n    volumes:\n      - \"${PFAD_BROKER}:/data\"\n  webserver:\n    image: ghcr.io/paperless-ngx/paperless-ngx:latest\n    restart: unless-stopped\n    depends_on:\n      - broker\n    ports:\n      - \"${PORT_WEB}:8000\"\n    environment:\n      - PAPERLESS_REDIS=redis://broker:6379\n      - PAPERLESS_SECRET_KEY=${GEHEIMNIS}\n      - PAPERLESS_ADMIN_USER=${ADMIN_NAME}\n      - PAPERLESS_ADMIN_PASSWORD=${ADMIN_PASSWORT}\n      - PAPERLESS_OCR_LANGUAGE=${OCR_SPRACHE}\n      - PAPERLESS_TIME_ZONE=${ZEITZONE}\n      - USERMAP_UID=${PUID}\n      - USERMAP_GID=${PGID}\n    volumes:\n      - \"${PFAD_DATEN}:/usr/src/paperless/data\"\n      - \"${PFAD_MEDIEN}:/usr/src/paperless/media\"\n      - \"${PFAD_EXPORT}:/usr/src/paperless/export\"\n      - \"${PFAD_EINGANG}:/usr/src/paperless/consume\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 8000,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "GEHEIMNIS",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Geheimer Schlüssel",
+      "erklaerung": "Signiert Sitzungen und Tokens (PAPERLESS_SECRET_KEY – ohne ihn startet Paperless nicht). Beliebige lange Zeichenfolge, je länger desto besser; du musst sie dir nicht merken. Ändern meldet alle Browser ab."
+    },
+    {
+      "name": "ADMIN_NAME",
+      "art": "variable",
+      "standard": "admin",
+      "beschriftung": "Admin-Benutzername",
+      "erklaerung": "Wird beim ersten Start als Superuser angelegt."
+    },
+    {
+      "name": "ADMIN_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Admin-Passwort",
+      "erklaerung": "Passwort des Superusers beim ersten Start. Pflichtfeld – später in Paperless änderbar."
+    },
+    {
+      "name": "OCR_SPRACHE",
+      "art": "auswahl",
+      "standard": "deu",
+      "werte": [
+        "deu",
+        "deu+eng",
+        "eng",
+        "fra",
+        "ita",
+        "spa"
+      ],
+      "beschriftung": "OCR-Sprache",
+      "erklaerung": "Sprache, in der die meisten deiner Dokumente geschrieben sind (Tesseract-Kürzel). deu+eng erkennt beides, etwas langsamer."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "PUID",
+      "art": "variable",
+      "standard": "1000",
+      "beschriftung": "Nutzer-ID (PUID)",
+      "erklaerung": "Linux-Nutzer-ID, mit der die App auf Dateien zugreift. 1000 ist der übliche Standard; wenn die App auf Freigaben nicht schreiben darf, nimm die ID eines NAS-Nutzers mit Schreibrecht oder 0 (Verwaltungsrechte)."
+    },
+    {
+      "name": "PGID",
+      "art": "variable",
+      "standard": "1000",
+      "beschriftung": "Gruppen-ID (PGID)",
+      "erklaerung": "Linux-Gruppen-ID passend zur Nutzer-ID. Dateien, die die App anlegt, gehören dieser Gruppe."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten/data",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Datenbank (SQLite), Suchindex und Klassifizierungsmodell. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    },
+    {
+      "name": "PFAD_MEDIEN",
+      "art": "pfad",
+      "standard": "daten/media",
+      "beschriftung": "Dokumentenarchiv",
+      "erklaerung": "Originale und archivierte PDFs – das eigentliche Archiv. Regelmäßig sichern."
+    },
+    {
+      "name": "PFAD_EXPORT",
+      "art": "pfad",
+      "standard": "daten/export",
+      "beschriftung": "Exportordner",
+      "erklaerung": "Ziel des Dokumenten-Exporters (document_exporter) für Sicherungen im Klartext."
+    },
+    {
+      "name": "PFAD_EINGANG",
+      "art": "pfad",
+      "standard": "eingang",
+      "beschriftung": "Eingangsordner (consume)",
+      "erklaerung": "Alles, was hier landet, wird eingelesen und verschwindet dann aus dem Ordner. Am besten eine Freigabe, in die dein Scanner schreibt."
+    },
+    {
+      "name": "PFAD_BROKER",
+      "art": "pfad",
+      "standard": "daten/broker",
+      "beschriftung": "Warteschlangen-Daten",
+      "erklaerung": "Zustand von Valkey (Redis-Nachfolger), der die Aufgabenwarteschlange hält."
+    }
+  ],
+  "hinweise": [
+    "Anmeldung mit dem Admin-Namen und -Passwort aus den Feldern. Die OCR-Sprachpakete Deutsch, Englisch, Italienisch, Spanisch und Französisch sind im Image enthalten.",
+    "Wenn du Paperless über eine Domain erreichbar machst, muss zusätzlich PAPERLESS_URL gesetzt werden (Compose-Datei), sonst blockt der CSRF-Schutz."
+  ]
+}

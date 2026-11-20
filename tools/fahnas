@@ -1,0 +1,450 @@
+#!/usr/bin/env node
+// ============================================================================
+// Erdacht und programmiert von Fabian Hammer, Deutschland.
+// (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+// ============================================================================
+// fahnas – Kommandozeile für die Konsole des NAS (als root). Spricht über den Unix-Socket mit dem Agenten.
+// Unterbefehle: status, apply, startcode, issue, export, import, update, passwort, totp-entfernen, sitzungen-beenden,
+// aktionen, hilfe. Der Kontext ist {nutzer:'konsole', rolle:'admin'} – der Agent behandelt „konsole“ wie einen Admin ohne
+// Sitzung (nutzer.totp.entfernen braucht von der Konsole kein Passwort).
+// Für Tests ersetzbar: FAHNAS_SYSTEMCTL (Pfad statt „systemctl“), FAHNAS_SYSTEMD (statt /etc/systemd/system),
+// FAHNAS_ISSUE_D (/etc/issue.d), FAHNAS_MOTD_D (/etc/motd.d), FAHNAS_GESUNDHEIT_MS (Wartezeit auf den Agenten nach update).
+
+import fs from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import crypto from 'node:crypto';
+import readline from 'node:readline';
+import { PFADE } from '../src/gemeinsam/pfade.js';
+import * as system from '../src/gemeinsam/system.js';
+import { FahnasFehler } from '../src/gemeinsam/fehler.js';
+import { AgentClient } from '../src/web/agentclient.js';
+import { exportErzeugen } from '../src/agent/export.js';
+
+const KONTEXT = Object.freeze({ nutzer: 'konsole', rolle: 'admin', ip: '-' });
+const STARTCODE_ZEICHEN = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // ohne 0/O und 1/I – nicht verwechselbar
+const GESUNDHEIT_ZEITLIMIT_MS = Number(process.env.FAHNAS_GESUNDHEIT_MS) > 0 ? Number(process.env.FAHNAS_GESUNDHEIT_MS) : 20_000;
+const SYSTEMCTL = process.env.FAHNAS_SYSTEMCTL || 'systemctl';
+const SYSTEMD_ORDNER = process.env.FAHNAS_SYSTEMD || '/etc/systemd/system';
+const ISSUE_ORDNER = process.env.FAHNAS_ISSUE_D || '/etc/issue.d';
+const MOTD_ORDNER = process.env.FAHNAS_MOTD_D || '/etc/motd.d';
+const UNIT_MUSTER = /\.(service|target|timer|socket|path)$/;
+const NUTZERNAME = /^(?=.{2,31}$)[a-z][a-z0-9_-]*(?:\.[a-z0-9][a-z0-9_-]*)*$/;
+/** Port der Weboberfläche (seit 0.6.17 8443 – 80/443 gehören FAH-Proxy). */
+const WEB_PORT = Number(process.env.FAHNAS_WEB_PORT) > 0 ? Number(process.env.FAHNAS_WEB_PORT) : 8443;
+
+const HILFE = `fahnas – Konsole des FAH-NAS
+
+Aufruf: fahnas <befehl> [optionen]
+
+  status                         Version, Dienste, Platten und Laufzeit anzeigen
+  apply                          Steuerdienst neu starten (rendert die Konfiguration) und Status zeigen
+  startcode [--zeigen]           Startcode für die Ersteinrichtung im Browser erzeugen (--zeigen: vorhandenen anzeigen)
+  issue                          Konsolenhinweis schreiben (/etc/issue.d/fahnas.issue mit Adresse \\4, /etc/motd.d/fahnas);
+                                 der Startcode steht nur darin, solange ${PFADE.startcode} existiert
+  export <datei> [--mit-geheimnissen] [--passwort]
+                                 Konfiguration als Archiv sichern (ohne Sitzungen; Passwort verschlüsselt mit AES-256)
+  import <datei> [--anwenden] [--passwort]
+                                 Archiv prüfen und Unterschiede zeigen; --anwenden übernimmt die Konfiguration
+  update <release.tar.gz>        Programm aktualisieren (Prüfsumme, Schnappschuss, systemd-Units erneuern + daemon-reload,
+                                 Gesundheitsprüfung, Rücktausch inkl. Units)
+  passwort <nutzer>              Notfall: Passwort eines Nutzers neu setzen (Abfrage ohne Echo)
+  totp-entfernen <nutzer>        Notfall: Zwei-Faktor-Anmeldung eines Nutzers abschalten (Handy/Wiederherstellungscodes verloren)
+  sitzungen-beenden <nutzer>     Alle Web-Sitzungen eines Nutzers beenden (hält den Web-Dienst dafür kurz an)
+  aktionen                       Alle Aktionen des Steuerdienstes auflisten
+  hilfe                          Diese Hilfe
+
+Pfade: Programm ${PFADE.programm}, Konfiguration ${PFADE.konfig}, Socket ${PFADE.agentSocket}
+Bei Problemen: systemctl status fahnas-agent fahnas-web · journalctl -u fahnas-agent -n 50
+`;
+
+function fehler(text, code = 1) { process.stderr.write(`Fehler: ${text}\n`); process.exit(code); }
+function zeile(t = '') { process.stdout.write(`${t}\n`); }
+function meldungVon(e) { const f = FahnasFehler.aus(e); let t = `${f.message} [${f.code}]`; if (f.details?.ausgabe) t += `\n  ${String(f.details.ausgabe).trim().split('\n').slice(-5).join('\n  ')}`; return t; }
+function gb(b) { return `${(Number(b) / 1e9).toFixed(1)} GB`; }
+function dauer(s) { const t = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60); return `${t ? `${t} Tage ` : ''}${h} h ${m} min`; }
+
+/** Liest ein Passwort ohne Echo (bei fehlendem Terminal: eine Zeile von stdin). */
+let stdinZeilen = null; // ohne Terminal: stdin einmal komplett lesen, Zeilen der Reihe nach ausgeben (mehrere Abfragen hintereinander)
+function passwortAbfragen(text) {
+  if (!process.stdin.isTTY) {
+    return new Promise((ok) => {
+      if (stdinZeilen) return ok(stdinZeilen.shift() ?? '');
+      let puffer = '';
+      process.stdin.setEncoding('utf8');
+      process.stdin.on('data', (d) => { puffer += d; });
+      process.stdin.once('end', () => { stdinZeilen = puffer.split(/\r?\n/); if (stdinZeilen.length && stdinZeilen[stdinZeilen.length - 1] === '') stdinZeilen.pop(); ok(stdinZeilen.shift() ?? ''); });
+      process.stdin.resume();
+    });
+  }
+  return new Promise((ok) => {
+    process.stdout.write(text);
+    const stdin = process.stdin;
+    let pw = '';
+    stdin.setRawMode(true); stdin.resume(); stdin.setEncoding('utf8');
+    const h = (teil) => {
+      for (const ch of teil) {
+        if (ch === '\r' || ch === '\n') { stdin.setRawMode(false); stdin.pause(); stdin.removeListener('data', h); process.stdout.write('\n'); ok(pw); return; }
+        if (ch === '\u0003') { stdin.setRawMode(false); process.stdout.write('\n'); process.exit(130); }
+        if (ch === '\u007f' || ch === '\b') pw = pw.slice(0, -1); else pw += ch;
+      }
+    };
+    stdin.on('data', h);
+  });
+}
+
+async function passwortZweimal(was) {
+  const a = await passwortAbfragen(`${was}: `);
+  if (a.length < 8) fehler('Das Passwort muss mindestens 8 Zeichen haben');
+  const b = await passwortAbfragen(`${was} (Wiederholung): `);
+  if (a !== b) fehler('Die Eingaben stimmen nicht überein');
+  return a;
+}
+
+/** Verbindet sich mit dem Agenten (Zeitlimit) und führt fn(client) aus. */
+async function mitAgent(fn, zeitlimit_ms = 5000) {
+  const c = new AgentClient(PFADE.agentSocket, PFADE.datenSocket);
+  const verbunden = await new Promise((ok) => {
+    const t = setTimeout(() => ok(false), zeitlimit_ms);
+    c.once('verbunden', () => { clearTimeout(t); ok(true); });
+    c.starten();
+  });
+  if (!verbunden) { c.stoppen(); throw new FahnasFehler('E_AGENT', `Steuerdienst nicht erreichbar (${PFADE.agentSocket}). Prüfe: systemctl status fahnas-agent`); }
+  try { return await fn(c); } finally { c.stoppen(); }
+}
+
+/** Führt eine Aufgabe über den Agenten aus und wartet auf ihr Ende; Fortschritt auf der Konsole. */
+async function aufgabeAusfuehren(c, aktion, params) {
+  const antwort = await c.aktion(aktion, params, KONTEXT);
+  if (!antwort || antwort.aufgabe === undefined) return antwort;
+  return new Promise((ok, nein) => {
+    let letzte = '';
+    const h = (e) => {
+      if (e.ereignis !== 'aufgabe' || e.aufgabe !== antwort.aufgabe) return;
+      if (e.meldung && e.meldung !== letzte) { letzte = e.meldung; zeile(`  ${Math.round((e.fortschritt || 0) * 100)} %  ${e.meldung}`); }
+      if (e.status === 'fertig') { c.off('ereignis', h); ok(e.ergebnis); }
+      else if (e.status === 'fehler') { c.off('ereignis', h); nein(new FahnasFehler(e.fehler?.code || 'E_UNBEKANNT', e.fehler?.meldung || 'Aufgabe fehlgeschlagen', e.fehler?.details)); }
+      else if (e.status === 'abgebrochen') { c.off('ereignis', h); nein(new FahnasFehler('E_ABGEBROCHEN', 'Aufgabe abgebrochen')); }
+    };
+    c.on('ereignis', h);
+    c.once('getrennt', () => { c.off('ereignis', h); nein(new FahnasFehler('E_AGENT', 'Verbindung zum Steuerdienst abgerissen')); });
+  });
+}
+
+function statusAusgeben(s) {
+  zeile(`FAH-NAS ${s.version} auf ${s.hostname}  (Kernel ${s.kernel}, läuft seit ${dauer(s.laufzeit_s)})`);
+  zeile('Dienste:');
+  for (const [d, z] of Object.entries(s.dienste || {})) zeile(`  ${d.padEnd(8)} ${z}`);
+  zeile('Platten:');
+  for (const p of s.platten || []) zeile(`  ${p.label.padEnd(8)} ${p.pfad.padEnd(12)} ${gb(p.gesamt - p.frei)} von ${gb(p.gesamt)} belegt`);
+  if (s.datenpartition_prozent !== null && s.datenpartition_prozent !== undefined) zeile(`Datenpartition: ${s.datenpartition_prozent} % belegt`);
+  if (s.ersteinrichtung_noetig) zeile('Hinweis: Noch kein Nutzer angelegt – Ersteinrichtung im Browser mit „fahnas startcode“.');
+}
+
+async function warteAufAgent(zeitlimit_ms) {
+  const ende = Date.now() + zeitlimit_ms;
+  let letzter = null;
+  while (Date.now() < ende) {
+    try { return await mitAgent((c) => c.aktion('system.status', {}, KONTEXT), 2000); } catch (e) { letzter = e; }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw letzter || new FahnasFehler('E_AGENT', 'Steuerdienst antwortet nicht');
+}
+
+async function sha256Datei(pfad) {
+  const h = crypto.createHash('sha256');
+  for await (const teil of createReadStream(pfad)) h.update(teil);
+  return h.digest('hex');
+}
+
+async function konfigNutzerVorhanden() {
+  try { const u = JSON.parse(await fs.readFile(path.join(PFADE.konfig, 'users.json'), 'utf8')); return Array.isArray(u.nutzer) && u.nutzer.length > 0; } catch { return false; }
+}
+
+/** Erste nicht-interne IPv4 einer echten Schnittstelle (keine Brücken/virtuellen Netze) oder null. */
+function ersteIpv4() {
+  for (const [name, liste] of Object.entries(os.networkInterfaces())) {
+    if (/^(lo|docker|br-|virbr|veth|tun|tap|wg|zt)/.test(name)) continue;
+    for (const a of liste || []) if (a.family === 'IPv4' && !a.internal) return a.address;
+  }
+  return null;
+}
+
+/**
+ * Schreibt den Konsolenhinweis: /etc/issue.d/fahnas.issue (agetty setzt \4 zur Laufzeit durch die aktuelle IPv4 –
+ * bleibt bei DHCP-Wechsel richtig) und /etc/motd.d/fahnas (pam_motd; statischer Text, deshalb Rechnername.local zuerst).
+ * Der Startcode erscheint NUR, solange die Datei /etc/fahnas/startcode existiert; nach der Ersteinrichtung ruft der
+ * Steuerdienst „fahnas issue“ erneut, damit der verbrauchte Code von tty1 verschwindet.
+ * @returns {Promise<{issue:string, motd:string, startcode:boolean}>}
+ */
+async function konsolenhinweisSchreiben() {
+  const host = os.hostname().split('.')[0];
+  const code = ((await system.lesenOderNull(PFADE.startcode)) || '').trim();
+  const ip = ersteIpv4();
+  const codeZeile = code ? `  Startcode: ${code} (nur bis zur Ersteinrichtung)\n` : '  Anmeldung mit Nutzername und Passwort (Ersteinrichtung abgeschlossen).\n';
+  const issue = `\n  FAH-NAS – Oberfläche: https://\\4:${WEB_PORT}  und  https://${host}.local:${WEB_PORT}\n${codeZeile}  Konsole: sudo fahnas status · Protokoll: /var/log/fahnas-erststart.log\n\n`;
+  const motd = `\n  FAH-NAS – Oberfläche: https://${host}.local:${WEB_PORT}${ip ? `  (Adresse: https://${ip}:${WEB_PORT})` : ''}\n${codeZeile}  Konsole: sudo fahnas status\n\n`;
+  const issuePfad = path.join(ISSUE_ORDNER, 'fahnas.issue');
+  const motdPfad = path.join(MOTD_ORDNER, 'fahnas');
+  await fs.mkdir(ISSUE_ORDNER, { recursive: true });
+  await fs.mkdir(MOTD_ORDNER, { recursive: true });
+  await fs.writeFile(issuePfad, issue, { mode: 0o644 });
+  await fs.writeFile(motdPfad, motd, { mode: 0o644 });
+  return { issue: issuePfad, motd: motdPfad, startcode: !!code };
+}
+
+/**
+ * systemd-Units aus <programm>/systemd nach SYSTEMD_ORDNER übernehmen – nur bei geändertem Inhalt; die bisherige Fassung
+ * wird nach <sicherung>/<unit> gelegt (für den Rücktausch). Bei Änderungen: daemon-reload.
+ * @returns {Promise<{geaendert:string[], gesichert:string[]}>}
+ */
+async function unitsInstallieren(programm, sicherung) {
+  const quelle = path.join(programm, 'systemd');
+  let namen = [];
+  try { namen = (await fs.readdir(quelle)).filter((n) => UNIT_MUSTER.test(n)).sort(); } catch (e) { if (e.code === 'ENOENT') return { geaendert: [], gesichert: [] }; throw e; }
+  const geaendert = []; const gesichert = [];
+  for (const n of namen) {
+    const neu = await fs.readFile(path.join(quelle, n), 'utf8');
+    const ziel = path.join(SYSTEMD_ORDNER, n);
+    const alt = await system.lesenOderNull(ziel);
+    if (alt === neu) continue;
+    if (alt !== null) {
+      await fs.mkdir(sicherung, { recursive: true, mode: 0o755 });
+      await fs.writeFile(path.join(sicherung, n), alt, { mode: 0o644 });
+      gesichert.push(n);
+    }
+    await fs.mkdir(SYSTEMD_ORDNER, { recursive: true });
+    const tmp = `${ziel}.${process.pid}.tmp`;
+    await fs.writeFile(tmp, neu, { mode: 0o644 });
+    await fs.rename(tmp, ziel);
+    geaendert.push(n);
+  }
+  if (geaendert.length) await system.befehl(SYSTEMCTL, ['daemon-reload']);
+  return { geaendert, gesichert };
+}
+
+/** Rücktausch der Units: gesicherte Fassung zurück, neu hinzugekommene entfernen, daemon-reload. */
+async function unitsZurueck(sicherung, geaendert) {
+  for (const n of geaendert) {
+    const alt = await system.lesenOderNull(path.join(sicherung, n));
+    const ziel = path.join(SYSTEMD_ORDNER, n);
+    if (alt !== null) await fs.writeFile(ziel, alt, { mode: 0o644 });
+    else await fs.rm(ziel, { force: true });
+  }
+  if (geaendert.length) { try { await system.befehl(SYSTEMCTL, ['daemon-reload']); } catch { /* egal */ } }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Unterbefehle
+// ---------------------------------------------------------------------------------------------------------------
+
+const BEFEHLE = {
+  async status() { statusAusgeben(await mitAgent((c) => c.aktion('system.status', {}, KONTEXT))); },
+
+  async apply() {
+    zeile('Steuerdienst wird neu gestartet (rendert Nutzer, Freigaben, Firewall, Netz) …');
+    await system.befehl(SYSTEMCTL, ['restart', 'fahnas-agent']);
+    statusAusgeben(await warteAufAgent(GESUNDHEIT_ZEITLIMIT_MS));
+  },
+
+  async issue() {
+    const r = await konsolenhinweisSchreiben();
+    zeile(`Konsolenhinweis geschrieben: ${r.issue}, ${r.motd} (${r.startcode ? 'mit' : 'ohne'} Startcode).`);
+  },
+
+  async startcode(args) {
+    if (args.includes('--zeigen')) {
+      const code = await system.lesenOderNull(PFADE.startcode);
+      if (code === null) fehler(`Kein Startcode vorhanden (${PFADE.startcode}). Erzeuge einen mit: fahnas startcode`);
+      zeile(`Startcode: ${code.trim()}`);
+      return;
+    }
+    let code = '';
+    for (let i = 0; i < 8; i++) code += STARTCODE_ZEICHEN[crypto.randomInt(STARTCODE_ZEICHEN.length)];
+    await fs.mkdir(path.dirname(PFADE.startcode), { recursive: true, mode: 0o700 });
+    await fs.writeFile(PFADE.startcode, `${code}\n`, { mode: 0o600 });
+    await fs.chmod(PFADE.startcode, 0o600);
+    zeile('');
+    zeile(`  Startcode für die Ersteinrichtung:  ${code}`);
+    zeile('');
+    zeile(`  Öffne im Browser https://${os.hostname().split('.')[0]}.local:${WEB_PORT}/ (oder die IP-Adresse des NAS) und gib den Code ein.`);
+    zeile('  Der Code gilt einmalig bis zum ersten Admin und wird danach gelöscht.');
+    if (await konfigNutzerVorhanden()) zeile('  Hinweis: Es gibt schon Nutzer – die Ersteinrichtung ist abgeschlossen, der Code wird nicht angenommen.');
+    // Konsolenhinweis gleich mitziehen (tty1/motd zeigen den neuen Code) – ohne Rechte auf /etc still übergehen
+    try {
+      const eltern = [path.dirname(ISSUE_ORDNER), path.dirname(MOTD_ORDNER)];
+      const da = await Promise.all(eltern.map((e) => fs.access(e).then(() => true, () => false)));
+      if (da.every(Boolean)) { await konsolenhinweisSchreiben(); zeile('  Konsolenhinweis (issue/motd) aktualisiert.'); }
+    } catch { /* z. B. Entwicklungsrechner ohne /etc-Rechte */ }
+  },
+
+  async export(args) {
+    const ziel = args.find((a) => !a.startsWith('--'));
+    if (!ziel) fehler('Zieldatei fehlt: fahnas export <datei> [--mit-geheimnissen] [--passwort]', 2);
+    const mit = args.includes('--mit-geheimnissen');
+    const passwort = args.includes('--passwort') ? await passwortZweimal('Passwort für das Archiv') : '';
+    const e = await exportErzeugen({ konfigOrdner: PFADE.konfig, mit_geheimnissen: mit, passwort, system });
+    let zielPfad = path.resolve(ziel);
+    try { if ((await fs.stat(zielPfad)).isDirectory()) zielPfad = path.join(zielPfad, e.dateiname); } catch { /* neue Datei */ }
+    if (e.verschluesselt && !zielPfad.endsWith('.fahnas')) zielPfad += '.fahnas';
+    await fs.copyFile(e.pfad, zielPfad);
+    await fs.chmod(zielPfad, 0o600);
+    await fs.unlink(e.pfad).catch(() => {});
+    zeile(`Export geschrieben: ${zielPfad} (${(e.groesse / 1024).toFixed(1)} KB, ${mit ? 'mit' : 'ohne'} Geheimnisse${e.verschluesselt ? ', verschlüsselt' : ''})`);
+  },
+
+  async import(args) {
+    const quelle = args.find((a) => !a.startsWith('--'));
+    if (!quelle) fehler('Archiv fehlt: fahnas import <datei> [--anwenden] [--passwort]', 2);
+    const quellPfad = path.resolve(quelle);
+    await fs.access(quellPfad).catch(() => fehler(`Datei nicht gefunden: ${quellPfad}`));
+    const anwenden = args.includes('--anwenden');
+    const passwort = (args.includes('--passwort') || quellPfad.endsWith('.fahnas')) ? await passwortAbfragen('Passwort des Archivs: ') : undefined;
+    const eingang = path.join(PFADE.konfig, 'eingang');
+    await fs.mkdir(eingang, { recursive: true, mode: 0o750 });
+    const dateiname = `import-konsole-${Date.now()}${quellPfad.endsWith('.fahnas') ? '.tar.fahnas' : '.tar'}`;
+    await fs.copyFile(quellPfad, path.join(eingang, dateiname));
+    const r = await mitAgent((c) => aufgabeAusfuehren(c, 'system.import', { dateiname, anwenden, ...(passwort ? { passwort } : {}) }));
+    const u = r.unterschiede || {};
+    const liste = (t, o) => { if (!o) return; const teile = []; if (o.hinzu?.length) teile.push(`neu: ${o.hinzu.join(', ')}`); if (o.weg?.length) teile.push(`fehlen im Archiv: ${o.weg.join(', ')}`); if (o.geaendert?.length) teile.push(`geändert: ${o.geaendert.join(', ')}`); zeile(`  ${t.padEnd(10)} ${teile.length ? teile.join(' · ') : 'keine Unterschiede'}`); };
+    zeile(`Archiv (Schema ${r.schema}) im Vergleich zum aktuellen Stand:`);
+    liste('Nutzer', u.nutzer); liste('Gruppen', u.gruppen); liste('Freigaben', u.freigaben);
+    zeile(`  ${'System'.padEnd(10)} ${u.system?.length ? `geändert: ${u.system.join(', ')}` : 'keine Unterschiede'}`);
+    zeile(`  ${'Zeitpläne'.padEnd(10)} ${u.snapshots ? 'geändert' : 'keine Unterschiede'}`);
+    for (const h of u.hinweise || []) zeile(`  Hinweis: ${h}`);
+    if (r.angewendet) {
+      zeile(`Übernommen: ${(r.uebernommen || []).join(', ') || 'nichts'}`);
+      if (r.apply) { zeile(`Gerendert: ${(r.apply.gerendert || []).join(', ') || '-'}`); if (r.apply.uebersprungen?.length) zeile(`Übersprungen: ${r.apply.uebersprungen.join(', ')}`); for (const f of r.apply.fehler || []) zeile(`  Fehler bei ${f.schritt}: ${f.meldung}`); }
+    } else {
+      zeile('Nichts geändert. Zum Übernehmen: fahnas import <datei> --anwenden');
+    }
+  },
+
+  async update(args) {
+    const datei = args.find((a) => !a.startsWith('--'));
+    if (!datei) fehler('Release-Archiv fehlt: fahnas update <fahnas_release.tar.gz>', 2);
+    const archiv = path.resolve(datei);
+    await fs.access(archiv).catch(() => fehler(`Datei nicht gefunden: ${archiv}`));
+    // 1. Prüfsumme
+    const summeText = await system.lesenOderNull(`${archiv}.sha256`);
+    if (summeText === null) fehler(`Prüfsumme fehlt: ${archiv}.sha256 (liegt neben dem Release-Archiv)`);
+    const soll = (summeText.trim().split(/\s+/)[0] || '').toLowerCase();
+    const ist = await sha256Datei(archiv);
+    if (!/^[0-9a-f]{64}$/.test(soll) || soll !== ist) fehler(`Prüfsumme stimmt nicht (erwartet ${soll.slice(0, 16)}…, ist ${ist.slice(0, 16)}…). Archiv erneut herunterladen.`);
+    zeile('Prüfsumme in Ordnung.');
+    // 2. Schnappschuss vor
+    let vor = null;
+    try { vor = Number((await system.befehl('snapper', ['-c', 'root', 'create', '-t', 'pre', '-p', '-d', 'FAH-NAS Programm-Update', '--cleanup-algorithm', 'number'])).stdout.trim()) || null; zeile(`Schnappschuss ${vor} angelegt.`); } catch (e) { zeile(`Hinweis: Schnappschuss nicht möglich (${meldungVon(e).split('\n')[0]}) – weiter mit Rücktausch-Sicherung.`); }
+    // 3. Entpacken nach .neu
+    const programm = PFADE.programm; const neu = `${programm}.neu`; const alt = `${programm}.alt`;
+    await fs.rm(neu, { recursive: true, force: true });
+    await fs.mkdir(neu, { recursive: true, mode: 0o755 });
+    try {
+      await system.befehl('tar', ['-C', neu, '--no-same-owner', '-xzf', archiv]);
+    } catch (e) { await fs.rm(neu, { recursive: true, force: true }); fehler(`Archiv konnte nicht entpackt werden: ${meldungVon(e)}`); }
+    const version = (await system.lesenOderNull(path.join(neu, 'BUILD_VERSION')) || '').trim();
+    if (!version || !(await system.existiert(path.join(neu, 'src', 'agent', 'agent.js')))) { await fs.rm(neu, { recursive: true, force: true }); fehler('Das Archiv ist kein FAH-NAS-Release (BUILD_VERSION oder src/agent/agent.js fehlt)'); }
+    const alteVersion = (await system.lesenOderNull(path.join(programm, 'BUILD_VERSION')) || '?').trim();
+    zeile(`Update ${alteVersion} → ${version}`);
+    // 4. Tauschen
+    await fs.rm(alt, { recursive: true, force: true });
+    const hatteAlt = await system.existiert(programm);
+    if (hatteAlt) await fs.rename(programm, alt);
+    await fs.rename(neu, programm);
+    await fs.chmod(path.join(programm, 'tools', 'fahnas'), 0o755).catch(() => {});
+    // 4b. systemd-Units des neuen Release (Inhaltsvergleich, alte Fassung nach <alt>/systemd.installiert) + daemon-reload –
+    //     sonst liefe ein Release mit geänderten Units (ReadWritePaths, Environment, Härtung) auf alten Units.
+    const unitSicherung = path.join(alt, 'systemd.installiert');
+    let units = { geaendert: [], gesichert: [] };
+    const zuruecktauschen = async (grund) => {
+      zeile(`Rücktausch: ${grund}`);
+      await unitsZurueck(unitSicherung, units.geaendert);
+      await fs.rm(`${programm}.fehlgeschlagen`, { recursive: true, force: true });
+      await fs.rename(programm, `${programm}.fehlgeschlagen`);
+      if (hatteAlt) { await fs.rename(alt, programm); await fs.rm(path.join(programm, 'systemd.installiert'), { recursive: true, force: true }); }
+      try { await system.befehl(SYSTEMCTL, ['restart', 'fahnas-agent', 'fahnas-web']); } catch { /* egal */ }
+    };
+    try { units = await unitsInstallieren(programm, unitSicherung); } catch (e) { await zuruecktauschen(`systemd-Units konnten nicht übernommen werden (${meldungVon(e).split('\n')[0]})`); fehler(`Update fehlgeschlagen, alter Stand läuft wieder. Fehlerhafter Stand liegt unter ${programm}.fehlgeschlagen`); }
+    if (units.geaendert.length) zeile(`systemd-Units erneuert: ${units.geaendert.join(', ')} (daemon-reload; alte Fassung unter ${unitSicherung})`);
+    // 5. Dienste neu starten und Gesundheit prüfen
+    try { await system.befehl(SYSTEMCTL, ['restart', 'fahnas-agent', 'fahnas-web']); } catch (e) { await zuruecktauschen(`Dienste starten nicht (${meldungVon(e).split('\n')[0]})`); fehler(`Update fehlgeschlagen, alter Stand läuft wieder. Fehlerhafter Stand liegt unter ${programm}.fehlgeschlagen`); }
+    let status = null;
+    try { status = await warteAufAgent(GESUNDHEIT_ZEITLIMIT_MS); } catch (e) { await zuruecktauschen(`Steuerdienst antwortet nicht innerhalb ${GESUNDHEIT_ZEITLIMIT_MS / 1000} s (${meldungVon(e).split('\n')[0]})`); fehler(`Update fehlgeschlagen, alter Stand läuft wieder. Protokoll: journalctl -u fahnas-agent -n 50`); }
+    // 6. Schnappschuss nach
+    try { const a = ['-c', 'root', 'create', '-t', 'post', '-p', '-d', 'FAH-NAS Programm-Update', '--cleanup-algorithm', 'number']; if (vor) a.push('--pre-number', String(vor)); await system.befehl('snapper', a); } catch { /* egal */ }
+    zeile(`Update erfolgreich: Version ${status.version} läuft. Vorheriger Stand: ${hatteAlt ? alt : '-'}`);
+  },
+
+  async passwort(args) {
+    const name = args.find((a) => !a.startsWith('--'));
+    if (!name || !NUTZERNAME.test(name)) fehler('Nutzername fehlt oder ungültig: fahnas passwort <nutzer>', 2);
+    const pw = await passwortZweimal(`Neues Passwort für ${name}`);
+    await mitAgent((c) => c.aktion('nutzer.passwort', { name, passwort: pw }, KONTEXT));
+    zeile(`Passwort für ${name} gesetzt (Web, Linux und Samba).`);
+  },
+
+  /** Notfallweg 2FA: ohne Passwort – die Konsole (root) ist die Vertrauensgrundlage. Der Agent kennt kontext.nutzer „konsole“. */
+  async 'totp-entfernen'(args) {
+    const name = args.find((a) => !a.startsWith('--'));
+    if (!name || !NUTZERNAME.test(name)) fehler('Nutzername fehlt oder ungültig: fahnas totp-entfernen <nutzer>', 2);
+    await mitAgent((c) => c.aktion('nutzer.totp.entfernen', { name }, KONTEXT));
+    zeile(`Zwei-Faktor-Anmeldung für ${name} entfernt. Anmeldung jetzt nur mit Passwort; neu einrichten unter „Mein Konto“.`);
+  },
+
+  /**
+   * Beendet alle Web-Sitzungen eines Nutzers: /data/config/web/sitzungen.json ({sitzungen:{<id>:{nutzer,…}}}) bereinigen.
+   * Der Web-Dienst hält die Sitzungen im Speicher und schreibt sie beim Stopp zurück – deshalb erst anhalten, dann die
+   * Datei ändern, dann wieder starten (Besitzer der Datei bleibt der Web-Nutzer fahnas).
+   */
+  async 'sitzungen-beenden'(args) {
+    const name = args.find((a) => !a.startsWith('--'));
+    if (!name || !NUTZERNAME.test(name)) fehler('Nutzername fehlt oder ungültig: fahnas sitzungen-beenden <nutzer>', 2);
+    const datei = path.join(PFADE.web, 'sitzungen.json');
+    let angehalten = false;
+    try { await system.befehl(SYSTEMCTL, ['stop', 'fahnas-web']); angehalten = true; } catch (e) {
+      zeile(`Hinweis: Web-Dienst nicht angehalten (${meldungVon(e).split('\n')[0]}) – ein laufender Web-Dienst übernimmt die Änderung erst beim nächsten Start.`);
+    }
+    try {
+      let d = null;
+      try { d = JSON.parse(await fs.readFile(datei, 'utf8')); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+      const sitzungen = d && d.sitzungen && typeof d.sitzungen === 'object' ? d.sitzungen : {};
+      const weg = Object.keys(sitzungen).filter((id) => sitzungen[id] && sitzungen[id].nutzer === name);
+      if (weg.length) {
+        for (const id of weg) delete sitzungen[id];
+        let besitzer = null;
+        try { const st = await fs.stat(datei); besitzer = { uid: st.uid, gid: st.gid }; } catch { /* neue Datei */ }
+        await fs.mkdir(path.dirname(datei), { recursive: true });
+        const tmp = `${datei}.${process.pid}.tmp`;
+        const fh = await fs.open(tmp, 'w', 0o600);
+        try { await fh.writeFile(JSON.stringify({ ...(d || {}), sitzungen }, null, 2) + '\n', 'utf8'); await fh.sync(); } finally { await fh.close(); }
+        if (besitzer) await fs.chown(tmp, besitzer.uid, besitzer.gid).catch(() => {});
+        await fs.rename(tmp, datei);
+      }
+      zeile(`${weg.length} Sitzung(en) von ${name} beendet.`);
+    } finally {
+      if (angehalten) { try { await system.befehl(SYSTEMCTL, ['start', 'fahnas-web']); } catch (e) { zeile(`Fehler: Web-Dienst startet nicht (${meldungVon(e).split('\n')[0]}) – bitte: systemctl start fahnas-web`); } }
+    }
+  },
+
+  async aktionen() {
+    const liste = await mitAgent((c) => c.aktion('agent.aktionen', {}, KONTEXT));
+    for (const a of liste.sort((x, y) => x.name.localeCompare(y.name))) zeile(`  ${a.name.padEnd(34)} ${a.rolle.padEnd(7)} ${a.aufgabe ? 'Aufgabe ' : '        '} ${a.beschreibung || ''}`);
+  },
+
+  async hilfe() { process.stdout.write(HILFE); },
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+const [befehl, ...rest] = process.argv.slice(2);
+if (!befehl || befehl === 'hilfe' || befehl === '--help' || befehl === '-h') {
+  await BEFEHLE.hilfe();
+  process.exit(befehl ? 0 : 2);
+}
+if (!Object.hasOwn(BEFEHLE, befehl)) { process.stderr.write(`Unbekannter Befehl „${befehl}“.\n\n${HILFE}`); process.exit(2); }
+try {
+  await BEFEHLE[befehl](rest);
+  process.exit(0);
+} catch (e) {
+  fehler(meldungVon(e));
+}

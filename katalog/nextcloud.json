@@ -1,0 +1,62 @@
+{
+  "id": "nextcloud",
+  "name": "Nextcloud",
+  "beschreibung": "Eigene Cloud für Dateien, Kalender, Kontakte und Zusammenarbeit mit Desktop- und Handy-Apps – hier mit MariaDB als Datenbank.",
+  "kategorie": "Dateien & Sync",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/nextcloud.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://github.com/docker-library/docs/blob/master/nextcloud/README.md",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  app:\n    image: nextcloud:stable\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:80\"\n    environment:\n      - MYSQL_HOST=db\n      - MYSQL_DATABASE=nextcloud\n      - MYSQL_USER=nextcloud\n      - MYSQL_PASSWORD=${DB_PASSWORT}\n      - PHP_MEMORY_LIMIT=${PHP_SPEICHER}\n    volumes:\n      - \"${PFAD_DATEN}:/var/www/html\"\n    depends_on:\n      - db\n  db:\n    image: mariadb:11.4\n    restart: unless-stopped\n    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW\n    environment:\n      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORT}\n      - MARIADB_PASSWORD=${DB_PASSWORT}\n      - MARIADB_DATABASE=nextcloud\n      - MARIADB_USER=nextcloud\n    volumes:\n      - \"${PFAD_DB}:/var/lib/mysql\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 8080,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "DB_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Datenbank-Passwort",
+      "erklaerung": "Verbindet Nextcloud mit MariaDB (nur intern zwischen den Containern). Beliebige Folge aus Buchstaben und Ziffern, mindestens 16 Zeichen – du musst sie dir nicht merken."
+    },
+    {
+      "name": "DB_ROOT_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "MariaDB-Root-Passwort",
+      "erklaerung": "Verwaltungspasswort der Datenbank (nur intern). Ebenfalls eine beliebige lange Zeichenfolge; wird nur bei Wartungsarbeiten an der Datenbank gebraucht."
+    },
+    {
+      "name": "PHP_SPEICHER",
+      "art": "variable",
+      "standard": "512M",
+      "beschriftung": "PHP-Speicherlimit",
+      "erklaerung": "Arbeitsspeicher je PHP-Prozess. 512M ist der empfohlene Mindestwert; bei großen Fotogalerien 1G."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten/nextcloud",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Programm, Apps, Einstellungen und die Nutzerdaten (data/). Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    },
+    {
+      "name": "PFAD_DB",
+      "art": "pfad",
+      "standard": "daten/mariadb",
+      "beschriftung": "Datenbankordner",
+      "erklaerung": "Dateien der MariaDB. Muss lokal auf dem NAS liegen."
+    }
+  ],
+  "hinweise": [
+    "Beim ersten Aufruf legst du das Admin-Konto an; die Datenbankfelder sind schon ausgefüllt. Die Adresse, über die du dabei zugreifst, wird als vertraute Domain eingetragen.",
+    "Freigaben des NAS lassen sich später über die App „External storage“ als lokaler Speicher einbinden (dazu die Freigabe als weiteren Ordner in der Compose-Datei einhängen).",
+    "Für den Zugriff von außen gehört ein Reverse-Proxy mit HTTPS davor."
+  ]
+}

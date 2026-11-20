@@ -1,0 +1,129 @@
+/* ============================================================================
+   Erdacht und programmiert von Fabian Hammer, Deutschland.
+   (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+   ============================================================================
+   Apps: Reiter, Karten (installiert und Katalog), Filterleiste, Installieren-Dialog (Felder, Konflikte, riskante
+   Rechte, Compose-Vorschau), Protokoll. Vorsilbe .ap-; baut auf stil.css und verwaltung-hilfen.css auf. */
+
+.ap-reiterleiste { display: flex; gap: 4px; border-bottom: 1px solid var(--fahnas-rand, #d9dee3); margin: 0 0 16px; overflow-x: auto; }
+.ap-reiter { appearance: none; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--fahnas-text-schwach, #6b7280); font: inherit; font-weight: 600; padding: 10px 14px; min-height: 44px; cursor: pointer; white-space: nowrap; border-radius: var(--fahnas-radius-klein, 8px) var(--fahnas-radius-klein, 8px) 0 0; }
+.ap-reiter:hover { color: var(--fahnas-text, #111); background: var(--fahnas-flaeche-2, rgba(0,0,0,0.04)); }
+.ap-reiter[aria-selected="true"] { color: var(--fahnas-akzent, #0b7272); border-bottom-color: var(--fahnas-akzent, #0b7272); }
+.ap-reiter:focus-visible { outline: 2px solid var(--fahnas-fokus, var(--fahnas-akzent, #0b7272)); outline-offset: -2px; }
+.ap-panel[hidden] { display: none; }
+
+.ap-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.ap-karte { display: flex; flex-direction: column; gap: 8px; margin: 0; min-width: 0; }
+.ap-karte-fehler { border-color: var(--fahnas-gefahr, #c62828); }
+.ap-kopf { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+.ap-kopf-text { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; }
+.ap-titel { margin: 0; font-size: 1.1rem; line-height: 1.25; overflow-wrap: anywhere; }
+.ap-name { margin: 0; font-size: 0.82rem; word-break: normal; overflow-wrap: anywhere; }
+.ap-badges .vw-badge { white-space: normal; overflow-wrap: anywhere; }
+.ap-symbol { flex: 0 0 48px; width: 48px; height: 48px; border-radius: 10px; overflow: hidden; background: var(--fahnas-flaeche-2, #f3f4f6); display: flex; align-items: center; justify-content: center; color: var(--fahnas-akzent, #0b7272); font-weight: 700; font-size: 1.3rem; }
+.ap-symbol img { width: 48px; height: 48px; object-fit: contain; display: block; }
+.ap-symbol-rueckfall .symbol { width: 28px; height: 28px; }
+.ap-zustand { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; }
+.ap-zustand-aktiv { color: var(--fahnas-erfolg, #15803d); }
+.ap-zustand-warnung { color: var(--fahnas-warnung, #b45309); }
+.ap-zustand-fehler { color: var(--fahnas-gefahr, #c62828); }
+.ap-zustand-inaktiv, .ap-zustand-unbekannt { color: var(--fahnas-text-schwach, #6b7280); }
+.ap-badges { margin: 0; }
+.ap-ressourcen, .ap-ports, .ap-aktualisiert { margin: 0; font-size: 0.85rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ap-beschreibung { margin: 0; font-size: 0.92rem; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.ap-knoepfe { margin-top: auto; padding-top: 6px; }
+.ap-knoepfe .knopf { flex: 0 1 auto; }
+.ap-leer { padding: 32px 16px; gap: 10px; }
+
+/* Katalog: Werkzeuge und Filter */
+.ap-werkzeuge { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 0 0 12px; }
+.ap-unraid-stand { margin: 0; font-size: 0.85rem; }
+.ap-filter { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0 12px; }
+.ap-filter .vw-feld { margin-bottom: 10px; }
+.ap-treffer { margin: 0 0 10px; font-size: 0.85rem; }
+.ap-mehr { display: flex; justify-content: center; margin: 16px 0 0; }
+
+/* Installieren / Einstellungen */
+.ap-vorlage-kopf { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 14px; }
+.ap-vorlage-beschreibung { margin: 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+.ap-felder { display: flex; flex-direction: column; }
+.ap-port { max-width: 160px; }
+.ap-konflikt { margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ap-konflikt[hidden] { display: none; }
+.ap-pfadfeld .vw-radio-gruppe { margin: 2px 0 6px; }
+.ap-pfad-app[hidden], .ap-pfad-freigabe[hidden] { display: none; }
+.ap-pfad-freigabe { display: flex; flex-direction: column; gap: 4px; }
+.ap-unterordner-label { font-size: 0.85rem; margin-top: 4px; }
+.ap-freigabe-hinweis:empty { display: none; }
+.ap-pruefbereich { border-top: 1px solid var(--fahnas-rand, #e5e7eb); padding-top: 10px; margin-top: 4px; }
+.ap-pruefstatus { margin: 0 0 8px; font-size: 0.9rem; min-height: 1.2em; }
+.ap-warnungen .hinweis { margin: 0 0 8px; }
+.ap-riskant { border: 1px solid var(--fahnas-gefahr, #c62828); border-radius: var(--fahnas-radius-klein, 8px); padding: 10px 12px; margin: 0 0 10px; background: var(--fahnas-gefahr-hell, rgba(198, 40, 40, 0.06)); }
+.ap-riskant[hidden] { display: none; }
+.ap-untertitel { margin: 0 0 4px; font-size: 1rem; }
+.ap-riskant-punkt { margin-bottom: 8px; }
+.ap-riskant-punkt .vw-schalter-text { font-weight: 500; }
+.ap-compose { max-height: 320px; overflow: auto; white-space: pre; margin: 0; }
+.ap-compose-details p.erklaerung { margin: 0 0 6px; }
+
+/* Protokoll */
+.ap-protokoll-leiste { align-items: flex-end; }
+.ap-knopf-feld { flex: 0 0 auto; }
+.ap-knopf-feld .knopf { margin-bottom: 14px; }
+.ap-zeilenwahl { max-width: 140px; }
+.ap-protokoll { margin: 0; padding: 10px; border-radius: var(--fahnas-radius-klein, 8px); background: var(--fahnas-hintergrund, #f3f4f6); border: 1px solid var(--fahnas-rand, #e5e7eb); min-height: 200px; max-height: 60vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.82rem; line-height: 1.4; }
+.ap-import-text { min-height: 200px; }
+
+/* Handy: eine Spalte, Filter untereinander, Knöpfe mindestens 44 px und in voller Breite */
+@media (max-width: 719px) {
+  .ap-liste { grid-template-columns: 1fr; }
+  .ap-filter { grid-template-columns: 1fr; }
+  .ap-karte .knopf, .ap-werkzeuge .knopf, .ap-mehr .knopf { min-height: 44px; }
+  .ap-knoepfe .knopf { flex: 1 1 calc(50% - 4px); }
+  .ap-werkzeuge .vw-knopfleiste { width: 100%; }
+  .ap-werkzeuge .knopf { flex: 1 1 auto; }
+  .ap-port { max-width: 100%; }
+}
+
+/* App aus ZIP: Inhalt der geprüften ZIP */
+.ap-zip-ergebnis { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.ap-zip-inhalt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; margin: 0; }
+.ap-zip-inhalt dt { color: var(--fahnas-text-schwach); }
+.ap-zip-inhalt dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Bearbeiten wie bei Unraid (12.10.2026): Ports, Ordner, Variablen als Zeilen */
+.ap-edit-dienst { border-top: 1px solid var(--fahnas-rand, #e5e7eb); padding-top: 8px; margin-top: 8px; }
+.ap-edit-abschnitt { margin: 10px 0; }
+.ap-edit-liste { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; }
+.ap-edit-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.ap-edit-label { font-size: 0.8rem; color: var(--fahnas-text-schwach, #6b7280); }
+.ap-edit-zeile .ap-edit-port { width: 7.5em; }
+.ap-edit-zeile .ap-edit-proto { width: auto; }
+.ap-edit-zeile .ap-edit-pfad { flex: 1 1 14em; min-width: 10em; }
+.ap-edit-zeile .ap-edit-name { flex: 0 1 20em; min-width: 12em; }
+.ap-edit-zeile .ap-edit-wert { flex: 1 1 16em; min-width: 10em; }
+.ap-edit-ro { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; }
+.ap-edit-warnung { color: var(--fahnas-warnung, #b45309); font-size: 0.85rem; }
+.ap-portkonflikt { color: var(--fahnas-warnung, #b45309); margin: 4px 0; }
+.ap-ordner-ort { margin: 0 0 8px; overflow-wrap: anywhere; }
+.ap-ordner-liste { list-style: none; margin: 0; padding: 0 8px; min-height: 160px; max-height: 50vh; overflow-y: auto; border: 1px solid var(--fahnas-rand, #e5e7eb); border-radius: var(--fahnas-radius, 8px); }
+.ap-ordner-liste li { padding: 3px 0; }
+.ap-ordner-knopf { background: none; border: none; padding: 2px 0; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.ap-ordner-knopf:hover, .ap-ordner-knopf:focus-visible { text-decoration: underline; }
+/* Sichtbarkeit je Nutzer (Plan 07, 0.21.0) */
+.ap-sichtbar { margin: 0; font-size: 0.85rem; overflow-wrap: anywhere; }
+.ap-sichtbar-liste { list-style: none; margin: 8px 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px 12px; }
+.ap-sichtbar-liste label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; }
+/* Docker-Übernahme vom alten NAS (0.25.0) */
+.ap-ue { display: flex; flex-direction: column; gap: 12px; }
+.ap-ue-ablage { display: flex; flex-direction: column; gap: 8px; }
+.ap-ue-ablage h3 { margin: 0; font-size: 1rem; }
+.ap-ue-projekt { border: 1px solid var(--fahnas-rand); border-radius: var(--fahnas-radius-klein); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.ap-ue-projekt.aus { opacity: 0.6; }
+.ap-ue-projekt .erklaerung.vw-mono { overflow-wrap: anywhere; }
+.ap-ue-wahl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ap-ue-option { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: start; }
+.ap-ue-option > .erklaerung { grid-column: 2; margin: 0; }
+.ap-ue-volumes { display: flex; flex-direction: column; gap: 4px; }
+.ap-ue-volume { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ap-ue-volume .vw-mono { overflow-wrap: anywhere; }

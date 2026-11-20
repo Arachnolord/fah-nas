@@ -1,0 +1,30 @@
+# ============================================================================
+# Erdacht und programmiert von Fabian Hammer, Deutschland.
+# (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+# ============================================================================
+# FAH-NAS – Erststart nach der Installation: Pakete, Nutzer, Programm, Samba, snapper, grub-btrfs, zram, Docker,
+# libvirt, Firewall, Dienste, Startcode. Idempotent (Markierungen unter /var/lib/fahnas/erststart/). Bricht ein Schritt
+# ab, versucht es die Unit nach 60 s erneut – und nach jedem Systemstart, bis fertig.ok existiert.
+# Wird von den late-commands des Installers nach /etc/systemd/system kopiert und aktiviert.
+
+[Unit]
+Description=FAH-NAS Erststart (Einrichtung nach der Installation)
+Documentation=file:/opt/fahnas-install/README.txt
+After=network-online.target local-fs.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/fahnas/erststart/fertig.ok
+# Kein Startlimit: das Skript darf beliebig oft neu versuchen (z. B. bis Internet für die Pakete da ist)
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/fahnas-install/erststart.sh
+# Der Schritt „Pakete“ kann lange dauern (apt) – kein Zeitlimit
+TimeoutStartSec=0
+Restart=on-failure
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

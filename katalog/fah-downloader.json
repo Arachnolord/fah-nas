@@ -1,0 +1,87 @@
+{
+  "id": "fah-downloader",
+  "name": "FAH Media Downloader",
+  "beschreibung": "Selbst gehosteter Medien-Downloader für über 1800 Portale (yt-dlp) mit Warteschlange, Bibliothek, eingebautem Player und automatischer Ablage nach Quelle, Art, Jahr und Monat.",
+  "kategorie": "Medien",
+  "symbol": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f4e5.svg",
+  "quelle": "eingebaut",
+  "nur_bestand": true,
+  "bauen": {
+    "release_zip": "fah-downloader.zip"
+  },
+  "dokumentation": null,
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  downloader:\n    image: fah-downloader:latest\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:8080\"\n    environment:\n      - TZ=${ZEITZONE}\n      - ADMIN_USER=${ADMIN_NAME}\n      - ADMIN_PASSWORD=${ADMIN_PASSWORT}\n      - HOSTFS_HOST_PATH=${PFAD_ZIEL}\n      - DOWNLOAD_ROOTS=${ZIEL_ORDNER}\n      - DOWNLOAD_ALLOW_PRIVATE=${HEIMNETZ_QUELLEN}\n    volumes:\n      - \"${PFAD_KONFIG}:/config\"\n      - \"${PFAD_DOWNLOADS}:/downloads\"\n      - \"${PFAD_ZIEL}:/hostfs\"\n    security_opt:\n      - no-new-privileges:true\n    mem_limit: 2g\n    healthcheck:\n      test: \"python3 -c \\\"import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=5)\\\"\"\n      interval: 60s\n      timeout: 10s\n      start_period: 120s\n      retries: 3\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 8080,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Ablage nach Jahr/Monat und Protokolle deine Ortszeit nutzen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "ADMIN_NAME",
+      "art": "variable",
+      "standard": "",
+      "beschriftung": "Start-Admin (optional)",
+      "erklaerung": "Wird nur beim allerersten Start angelegt, solange kein Nutzer existiert. Leer lassen = Ersteinrichtung über die Weboberfläche."
+    },
+    {
+      "name": "ADMIN_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "beschriftung": "Passwort des Start-Admins",
+      "erklaerung": "Nur zusammen mit dem Start-Admin nötig. Leer lassen, wenn du das Konto im Browser anlegst. Sobald ein Konto existiert, wirken spätere Änderungen hier nicht mehr."
+    },
+    {
+      "name": "PFAD_KONFIG",
+      "art": "pfad",
+      "standard": "daten/config",
+      "beschriftung": "Konfigurationsordner",
+      "erklaerung": "Hier liegen Einstellungen, Zugangsdaten und Verlauf des Downloaders. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten. Außerdem liegen hier die Zwischendateien des Players (bis 4 GB) und, wenn „lokal zwischenspeichern“ an ist, die Teil-Downloads – plane dafür Platz ein."
+    },
+    {
+      "name": "PFAD_DOWNLOADS",
+      "art": "pfad",
+      "standard": "daten/downloads",
+      "beschriftung": "Standard-Downloadordner",
+      "erklaerung": "Hierhin lädt der Downloader, wenn du kein anderes Ziel wählst. Er schreibt als root: Im App-Ordner verwaltest du die Dateien nur über die App. Willst du sie per SMB oder im Dateimanager sortieren und löschen, wähle eine Freigabe (z. B. /data/shares/medien/downloads)."
+    },
+    {
+      "name": "PFAD_ZIEL",
+      "art": "pfad",
+      "standard": "ziele",
+      "beschriftung": "Frei wählbare Ziele",
+      "erklaerung": "Dieser Baum erscheint im Ordner-Browser als wählbares Ziel (schreibend). Wähle die Freigabe, in der deine Medien liegen (z. B. /data/shares/medien)."
+    },
+    {
+      "name": "ZIEL_ORDNER",
+      "art": "variable",
+      "standard": "",
+      "beschriftung": "Erlaubte Zielordner",
+      "erklaerung": "Kommagetrennte Unterordner INNERHALB der frei wählbaren Ziele, in die geschrieben werden darf, jeweils relativ zu diesem Ordner (bei /data/shares/medien z. B. downloads,serien). Die Ordner müssen schon existieren. Leer = der ganze Baum."
+    },
+    {
+      "name": "HEIMNETZ_QUELLEN",
+      "art": "schalter",
+      "standard": false,
+      "beschriftung": "Quellen im Heimnetz erlauben",
+      "erklaerung": "Aus = Adressen im eigenen Netz (10.x, 192.168.x, localhost …) werden als Download-Quelle abgelehnt, damit über den Downloader keine internen Dienste angesprochen werden. Nur einschalten, wenn du bewusst von einem eigenen Server im Heimnetz laden willst."
+    }
+  ],
+  "hinweise": [
+    "FAH-NAS baut das Image beim Installieren und Aktualisieren selbst aus dem mitgelieferten Release-ZIP fah-downloader.zip – beim ersten Mal dauert das einige Minuten und braucht Internet (Debian- und Python-Pakete).",
+    "Erstanmeldung: Es gibt kein Standardpasswort. Beim ersten Aufruf der Weboberfläche legst du unter „Ersteinrichtung“ das Admin-Konto an – gleich nach der Installation, denn bis dahin kann jeder im Heimnetz das Konto anlegen. Alternativ füllst du vorher „Start-Admin“ und „Passwort des Start-Admins“ aus (beide).",
+    "Passwort vergessen: Lösch im Konfigurationsordner die Datei users.json – beim nächsten Aufruf erscheint wieder die Ersteinrichtung.",
+    "Den Bereich „NAS-Freigaben“ in der Oberfläche nicht benutzen: Das Einhängen fremder SMB-Freigaben braucht SYS_ADMIN, DAC_READ_SEARCH und apparmor:unconfined, die FAH-NAS nicht vergibt. Ein gescheiterter Versuch hinterlässt ein Ziel „NAS: <Name>“, das nur im Container liegt und beim nächsten Update weg ist. Nimm stattdessen „Frei wählbare Ziele“ oder den Standard-Downloadordner.",
+    "Die Oberfläche spricht von HOSTFS_MOUNT und DOWNLOAD_ROOTS in der .env – in FAH-NAS sind das die Einstellungen „Frei wählbare Ziele“ und „Erlaubte Zielordner“ dieser App."
+  ]
+}

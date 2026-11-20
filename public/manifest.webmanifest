@@ -1,0 +1,14 @@
+{
+  "name": "FAH-NAS",
+  "short_name": "FAH-NAS",
+  "description": "Steuerzentrale des FAH-NAS",
+  "lang": "de",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f5f7",
+  "theme_color": "#0e8a8a",
+  "icons": [
+    { "src": "/symbole.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

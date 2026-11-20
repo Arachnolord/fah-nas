@@ -1,0 +1,61 @@
+{
+  "id": "immich",
+  "name": "Immich",
+  "beschreibung": "Selbst gehostete Foto- und Videoverwaltung im Stil von Google Fotos: automatische Sicherung vom Handy, Gesichtserkennung, Karten, Alben und Teilen – vier Container in einer Vorlage.",
+  "kategorie": "Fotos",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/immich.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://docs.immich.app/install/docker-compose",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  immich-server:\n    image: ghcr.io/immich-app/immich-server:v3\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:2283\"\n    environment:\n      - TZ=${ZEITZONE}\n      - DB_HOSTNAME=database\n      - DB_USERNAME=postgres\n      - DB_PASSWORD=${DB_PASSWORT}\n      - DB_DATABASE_NAME=immich\n      - REDIS_HOSTNAME=redis\n    volumes:\n      - \"${PFAD_BIBLIOTHEK}:/data\"\n    depends_on:\n      - redis\n      - database\n  immich-machine-learning:\n    image: ghcr.io/immich-app/immich-machine-learning:v3\n    restart: unless-stopped\n    volumes:\n      - \"${PFAD_MODELLE}:/cache\"\n  redis:\n    image: docker.io/valkey/valkey:9\n    restart: unless-stopped\n    healthcheck:\n      test: redis-cli ping | grep -q PONG || exit 1\n  database:\n    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0\n    restart: unless-stopped\n    shm_size: 128mb\n    environment:\n      - POSTGRES_PASSWORD=${DB_PASSWORT}\n      - POSTGRES_USER=postgres\n      - POSTGRES_DB=immich\n      - POSTGRES_INITDB_ARGS=--data-checksums\n    volumes:\n      - \"${PFAD_DB}:/var/lib/postgresql/data\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 2283,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "DB_PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Datenbank-Passwort",
+      "erklaerung": "Verbindet Immich mit seiner Postgres-Datenbank (nur intern zwischen den Containern). Beliebige Folge aus Buchstaben und Ziffern, mindestens 16 Zeichen, keine Sonderzeichen – du musst sie dir nicht merken."
+    },
+    {
+      "name": "PFAD_BIBLIOTHEK",
+      "art": "pfad",
+      "standard": "bibliothek",
+      "beschriftung": "Fotobibliothek",
+      "erklaerung": "Hier speichert Immich alle hochgeladenen Fotos und Videos (/data). Viel Platz einplanen; eine eigene Freigabe ist sinnvoll."
+    },
+    {
+      "name": "PFAD_MODELLE",
+      "art": "pfad",
+      "standard": "daten/modelle",
+      "beschriftung": "KI-Modelle",
+      "erklaerung": "Zwischenspeicher für die Modelle der Gesichts- und Objekterkennung (einige GB, werden beim ersten Start geladen)."
+    },
+    {
+      "name": "PFAD_DB",
+      "art": "pfad",
+      "standard": "daten/postgres",
+      "beschriftung": "Datenbankordner",
+      "erklaerung": "Dateien der Postgres-Datenbank. Muss auf einer lokalen Platte liegen – Netzfreigaben werden nicht unterstützt."
+    }
+  ],
+  "hinweise": [
+    "Der erste Nutzer, der sich im Browser registriert, wird Administrator.",
+    "Empfohlen sind mindestens 4 GB RAM (6 GB mit KI-Erkennung); die Modelle laden beim ersten Start einige hundert MB.",
+    "Die Version ist auf v3 festgelegt – Aktualisieren holt Fehlerkorrekturen innerhalb dieser Hauptversion. Vor einem Sprung auf eine neue Hauptversion die Release-Hinweise lesen."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "mosquitto",
+  "name": "Mosquitto (MQTT)",
+  "beschreibung": "Leichter MQTT-Broker von Eclipse – die Nachrichtenzentrale für Sensoren, Zigbee2MQTT, Tasmota, Shelly und Home Assistant.",
+  "kategorie": "Smart Home",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/mosquitto.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://github.com/docker-library/docs/blob/master/eclipse-mosquitto/README.md",
+  "webui": null,
+  "compose": "services:\n  mosquitto:\n    image: eclipse-mosquitto:2\n    restart: unless-stopped\n    ports:\n      - \"${PORT_MQTT}:1883\"\n    volumes:\n      - \"${PFAD_KONFIG}:/mosquitto/config\"\n      - \"${PFAD_DATEN}:/mosquitto/data\"\n      - \"${PFAD_LOG}:/mosquitto/log\"\n    command:\n      - /bin/sh\n      - -c\n      - 'test -f /mosquitto/config/mosquitto.conf || printf \"listener 1883\\nallow_anonymous ${ANONYM}\\npersistence true\\npersistence_location /mosquitto/data/\\nlog_dest stdout\\n\" > /mosquitto/config/mosquitto.conf; exec /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf'\n",
+  "felder": [
+    {
+      "name": "PORT_MQTT",
+      "art": "port",
+      "standard": 1883,
+      "beschriftung": "MQTT-Port",
+      "erklaerung": "Auf diesem Port verbinden sich die Geräte (unverschlüsselt, MQTT). Standard ist 1883."
+    },
+    {
+      "name": "ANONYM",
+      "art": "schalter",
+      "standard": true,
+      "beschriftung": "Anonyme Verbindungen erlauben",
+      "erklaerung": "An = Geräte dürfen sich ohne Benutzername und Passwort verbinden (üblich im Heimnetz). Aus = du musst vorher mit mosquitto_passwd eine Passwortdatei anlegen und in der mosquitto.conf eintragen, sonst kommt niemand hinein."
+    },
+    {
+      "name": "PFAD_KONFIG",
+      "art": "pfad",
+      "standard": "daten/config",
+      "beschriftung": "Konfigurationsordner",
+      "erklaerung": "Hier liegen die Datei mosquitto.conf (beim ersten Start angelegt) und Passwortdateien. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten/data",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen gespeicherte Nachrichten (Persistenz). Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    },
+    {
+      "name": "PFAD_LOG",
+      "art": "pfad",
+      "standard": "daten/log",
+      "beschriftung": "Protokollordner",
+      "erklaerung": "Protokolldateien des Brokers, falls in der mosquitto.conf log_dest file gesetzt wird."
+    }
+  ],
+  "hinweise": [
+    "Seit Mosquitto 2.0 lauscht der Broker ohne Konfiguration nur auf localhost. Der Startbefehl legt deshalb beim ersten Start eine mosquitto.conf mit listener 1883 an, falls keine existiert – danach kannst du sie im Konfigurationsordner frei anpassen.",
+    "Passwörter: docker exec -it <container> mosquitto_passwd -c /mosquitto/config/passwd <name>, dann in der mosquitto.conf password_file /mosquitto/config/passwd eintragen und Anonym ausschalten."
+  ]
+}

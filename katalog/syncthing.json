@@ -1,0 +1,73 @@
+{
+  "id": "syncthing",
+  "name": "Syncthing",
+  "beschreibung": "Kontinuierlicher Dateiabgleich zwischen deinen Geräten – direkt, verschlüsselt und ohne Cloud. Das NAS wird zum immer erreichbaren Knoten.",
+  "kategorie": "Dateien & Sync",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/syncthing.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://docs.syncthing.net/users/docker.html",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  syncthing:\n    image: syncthing/syncthing:latest\n    restart: unless-stopped\n    hostname: ${GERAETENAME}\n    ports:\n      - \"${PORT_WEB}:8384\"\n      - \"${PORT_SYNC}:22000/tcp\"\n      - \"${PORT_SYNC}:22000/udp\"\n      - \"${PORT_ERKENNUNG}:21027/udp\"\n    environment:\n      - PUID=${PUID}\n      - PGID=${PGID}\n    volumes:\n      - \"${PFAD_DATEN}:/var/syncthing\"\n      - \"${PFAD_ORDNER}:/var/syncthing/ordner\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 8384,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "PORT_SYNC",
+      "art": "port",
+      "standard": 22000,
+      "beschriftung": "Sync-Port (TCP und UDP)",
+      "erklaerung": "Über diesen Port sprechen die Geräte miteinander. Für Verbindungen von außen im Router zum NAS weiterleiten."
+    },
+    {
+      "name": "PORT_ERKENNUNG",
+      "art": "port",
+      "standard": 21027,
+      "beschriftung": "Erkennungs-Port (UDP)",
+      "erklaerung": "Lokale Geräteerkennung per Broadcast. Im Bridge-Netz nur eingeschränkt wirksam – Geräte lassen sich auch von Hand per ID hinzufügen."
+    },
+    {
+      "name": "GERAETENAME",
+      "art": "variable",
+      "standard": "fahnas",
+      "beschriftung": "Gerätename",
+      "erklaerung": "So heißt das NAS in Syncthing bei den anderen Geräten."
+    },
+    {
+      "name": "PUID",
+      "art": "variable",
+      "standard": "1000",
+      "beschriftung": "Nutzer-ID (PUID)",
+      "erklaerung": "Linux-Nutzer-ID, mit der die App auf Dateien zugreift. 1000 ist der übliche Standard; wenn die App auf Freigaben nicht schreiben darf, nimm die ID eines NAS-Nutzers mit Schreibrecht oder 0 (Verwaltungsrechte)."
+    },
+    {
+      "name": "PGID",
+      "art": "variable",
+      "standard": "1000",
+      "beschriftung": "Gruppen-ID (PGID)",
+      "erklaerung": "Linux-Gruppen-ID passend zur Nutzer-ID. Dateien, die die App anlegt, gehören dieser Gruppe."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Konfiguration, Schlüssel und Datenbank von Syncthing. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    },
+    {
+      "name": "PFAD_ORDNER",
+      "art": "pfad",
+      "standard": "sync",
+      "beschriftung": "Sync-Ordner",
+      "erklaerung": "Wurzel für die abzugleichenden Ordner (im Container /var/syncthing/ordner). Am besten eine Freigabe, damit du im Netz direkt darauf zugreifst."
+    }
+  ],
+  "hinweise": [
+    "Die Weboberfläche ist beim ersten Start ohne Passwort – unter Einstellungen → Grafische Oberfläche sofort Nutzer und Passwort setzen.",
+    "Für die automatische Erkennung im Heimnetz empfiehlt Syncthing das Host-Netz (network_mode: host); die Vorlage nutzt bewusst das Bridge-Netz mit festen Ports."
+  ]
+}

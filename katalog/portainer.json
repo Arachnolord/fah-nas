@@ -1,0 +1,34 @@
+{
+  "id": "portainer",
+  "name": "Portainer CE",
+  "beschreibung": "Grafische Verwaltung für Docker: Container, Images, Volumes, Netzwerke und Stacks im Browser – auch für Dinge, die der App-Katalog nicht abbildet.",
+  "kategorie": "Verwaltung",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/portainer.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://docs.portainer.io/start/install-ce/server/docker/linux",
+  "webui": "https://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  portainer:\n    image: portainer/portainer-ce:lts\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:9443\"\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n      - \"${PFAD_DATEN}:/data\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 9443,
+      "beschriftung": "Port der Weboberfläche (HTTPS)",
+      "erklaerung": "Portainer liefert seine Oberfläche mit einem selbst signierten Zertifikat aus – der Browser warnt beim ersten Aufruf einmal."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Nutzer, Einstellungen und Stack-Definitionen von Portainer. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    }
+  ],
+  "hinweise": [
+    "Das Admin-Konto muss innerhalb von 5 Minuten nach dem ersten Start angelegt werden, sonst sperrt Portainer die Einrichtung – dann die App einfach neu starten.",
+    "Von FAH-NAS installierte Apps erscheinen in Portainer als Stacks mit dem Präfix fahnas-. Änderungen dort kennt FAH-NAS nicht – Apps aus dem Katalog besser hier verwalten."
+  ],
+  "risiko": [
+    "Bindet /var/run/docker.sock ein: Die App darf damit alle Container auf dem NAS steuern und hat faktisch Verwaltungsrechte auf dem ganzen System. Nur installieren, wenn du der App vertraust, und die Weboberfläche nie ungeschützt ins Internet stellen."
+  ]
+}

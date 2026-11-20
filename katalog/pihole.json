@@ -1,0 +1,61 @@
+{
+  "id": "pihole",
+  "name": "Pi-hole",
+  "beschreibung": "Netzweiter Werbe- und Trackerblocker auf DNS-Ebene mit Statistik, Gruppen und eigener Weboberfläche. Alle Geräte profitieren, sobald ihr DNS auf das NAS zeigt.",
+  "kategorie": "Netzwerk & DNS",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/pi-hole.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://github.com/pi-hole/docker-pi-hole",
+  "webui": "http://{HOST}:{PORT_WEB}/admin",
+  "compose": "services:\n  pihole:\n    image: pihole/pihole:latest\n    restart: unless-stopped\n    ports:\n      - \"${PORT_DNS}:53/tcp\"\n      - \"${PORT_DNS}:53/udp\"\n      - \"${PORT_WEB}:80/tcp\"\n    environment:\n      - TZ=${ZEITZONE}\n      - FTLCONF_webserver_api_password=${PASSWORT}\n      - FTLCONF_dns_listeningMode=all\n      - FTLCONF_dns_upstreams=${UPSTREAM}\n    volumes:\n      - \"${PFAD_DATEN}:/etc/pihole\"\n",
+  "felder": [
+    {
+      "name": "PORT_DNS",
+      "art": "port",
+      "standard": 53,
+      "beschriftung": "DNS-Port (UDP und TCP)",
+      "erklaerung": "Auf diesem Port beantwortet Pi-hole DNS-Anfragen. Geräte erwarten 53 – siehe Hinweise zu systemd-resolved."
+    },
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 8082,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "ZEITZONE",
+      "art": "variable",
+      "standard": "Europe/Berlin",
+      "beschriftung": "Zeitzone",
+      "erklaerung": "Zeitzone im Container, damit Zeitpläne und Protokolle in deiner Ortszeit laufen (Kennung wie Europe/Berlin)."
+    },
+    {
+      "name": "PASSWORT",
+      "art": "geheimnis",
+      "standard": "",
+      "pflicht": true,
+      "beschriftung": "Passwort der Weboberfläche",
+      "erklaerung": "Anmeldung unter /admin. Pflichtfeld – ohne Wert vergibt Pi-hole ein Zufallspasswort, das nur im Protokoll steht."
+    },
+    {
+      "name": "UPSTREAM",
+      "art": "variable",
+      "standard": "9.9.9.9;149.112.112.112",
+      "beschriftung": "Vorgelagerte DNS-Server",
+      "erklaerung": "An diese Server gehen die erlaubten Anfragen (mit ; getrennt). Standard ist Quad9; Alternativen 1.1.1.1;1.0.0.1 (Cloudflare) oder die Adresse deines Routers."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen Blocklisten, Datenbank und Einstellungen von Pi-hole. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    }
+  ],
+  "hinweise": [
+    "Port 53 ist auf Ubuntu oft von systemd-resolved belegt (Stub-Listener auf 127.0.0.53). Dann in /etc/systemd/resolved.conf „DNSStubListener=no“ setzen und systemd-resolved neu starten, sonst startet Pi-hole nicht.",
+    "Danach im Router (DHCP) das NAS als DNS-Server eintragen. Wenn der Blocker ausfällt, haben die Geräte kein DNS mehr – zweiten DNS im Router eintragen oder Autostart anlassen.",
+    "Der DHCP-Server von Pi-hole braucht Port 67/udp und die Fähigkeit NET_ADMIN – in dieser Vorlage nicht enthalten."
+  ]
+}

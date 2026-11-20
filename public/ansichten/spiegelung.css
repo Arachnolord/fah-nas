@@ -1,0 +1,78 @@
+/* ============================================================================
+   Erdacht und programmiert von Fabian Hammer, Deutschland.
+   (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
+   ============================================================================
+   Spiegelung: Karten je Spiegelung, Dialog (Ordnerwahl, Wochentage), Protokoll. */
+
+.sp-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.sp-karte { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.sp-kopf { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sp-name { margin: 0; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.sp-weg { margin: 0; font-family: var(--fahnas-schrift-mono, ui-monospace, monospace); font-size: 0.9rem; overflow-wrap: anywhere; }
+.sp-pfeil { color: var(--fahnas-akzent, #2563eb); font-weight: 600; }
+.sp-daten { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; font-size: 0.9rem; }
+.sp-daten dt { color: var(--fahnas-text-schwach, #6b7280); }
+.sp-daten dd { margin: 0; overflow-wrap: anywhere; }
+.sp-meldung-fehler { color: var(--fahnas-gefahr-text, #dc2626); }
+.sp-meldung-warnung, .sp-meldung-uebersprungen { color: var(--fahnas-warnung, #b45309); }
+.sp-knoepfe { flex-wrap: wrap; margin-top: auto; }
+.sp-abschnitt { margin: 16px 0 6px; font-size: 1rem; }
+.sp-seite-felder { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0 12px; align-items: end; }
+.sp-wahl-knopf { margin-bottom: 14px; }
+.sp-tage { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 4px 0; }
+.sp-tag { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.sp-ort { font-family: var(--fahnas-schrift-mono, ui-monospace, monospace); margin: 0 0 8px; overflow-wrap: anywhere; }
+.sp-ordner { list-style: none; margin: 0; padding: 0 8px; min-height: 160px; max-height: 50vh; overflow-y: auto; border: 1px solid var(--fahnas-rand, #e5e7eb); border-radius: var(--fahnas-radius, 8px); }
+.sp-ordner li { padding: 3px 0; }
+.sp-ordnerknopf { background: none; border: none; padding: 2px 0; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.sp-ordnerknopf:hover, .sp-ordnerknopf:focus-visible { text-decoration: underline; }
+.sp-pre { max-height: 40vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.8rem; background: var(--fahnas-flaeche-2, rgba(127, 127, 127, 0.08)); padding: 8px; border-radius: var(--fahnas-radius, 8px); }
+.sp-lauf { border-bottom: 1px solid var(--fahnas-rand, #e5e7eb); padding: 6px 0; }
+.sp-lauf summary { cursor: pointer; }
+@media (max-width: 720px) {
+  .sp-seite-felder { grid-template-columns: 1fr; }
+  .sp-wahl-knopf { margin-bottom: 8px; }
+}
+.sp-seite-block { border-left: 3px solid var(--fahnas-rand, #e5e7eb); padding-left: 12px; margin-bottom: 8px; }
+.sp-fern-liste { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 12px; }
+.sp-fern { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--fahnas-rand, #e5e7eb); }
+.sp-fern-text { min-width: 0; overflow-wrap: anywhere; }
+.sp-fern-freigaben { margin: 8px 0 0; padding-left: 20px; }
+
+/* Assistent „Sicherung einrichten“ (12.10.2026) */
+.sa-schritte { display: flex; gap: 6px; list-style: none; margin: 0 0 14px; padding: 0; counter-reset: sa; flex-wrap: wrap; }
+.sa-schritte li { counter-increment: sa; padding: 4px 10px; border-radius: 999px; background: var(--fahnas-flaeche-2); color: var(--fahnas-text-schwach); font-size: 0.85rem; }
+.sa-schritte li::before { content: counter(sa) ". "; }
+.sa-schritte li.aktiv { background: var(--fahnas-akzent); color: var(--fahnas-akzent-text); font-weight: 600; }
+.sa-schritte li.erledigt { color: var(--fahnas-text); }
+.sa-wahl { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin: 10px 0 14px; }
+.sa-wahl-knopf { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 12px; border: 2px solid var(--fahnas-rand); border-radius: var(--fahnas-radius); background: var(--fahnas-flaeche); color: var(--fahnas-text); font: inherit; cursor: pointer; }
+.sa-wahl-knopf .erklaerung { margin: 0; font-size: 0.82rem; }
+.sa-wahl-knopf.aktiv { border-color: var(--fahnas-akzent); background: var(--fahnas-akzent-hell); }
+.sa-fuss { margin-top: 16px; justify-content: flex-end; }
+.sa-zusammenfassung { margin: 0 0 12px; }
+.sa-staende, .sa-stand-inhalt { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.sa-stand-inhalt li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 6px; border-bottom: 1px solid var(--fahnas-rand); }
+
+/* Sicherung oder Spiegelung auf einen Blick (Betreiber 09.11.2026): eigene Farbe, Symbol, Abschnitt */
+.sp-wurzel { --sp-sicherung: #2563eb; --sp-spiegelung: #9333ea; }
+@media (prefers-color-scheme: dark) { :root:not([data-design="hell"]) .sp-wurzel { --sp-sicherung: #60a5fa; --sp-spiegelung: #c084fc; } }
+:root[data-design="dunkel"] .sp-wurzel { --sp-sicherung: #60a5fa; --sp-spiegelung: #c084fc; }
+.sp-art-sicherung { --sp-farbe: var(--sp-sicherung); }
+.sp-art-spiegelung { --sp-farbe: var(--sp-spiegelung); }
+.sp-gruppe { margin: 0 0 24px; }
+.sp-gruppe-kopf { display: flex; align-items: center; gap: 10px; margin: 0 0 2px; color: var(--sp-farbe); }
+.sp-gruppe-titel { margin: 0; font-size: 1.2rem; color: var(--fahnas-text); }
+.sp-gruppe-kopf .sp-art-symbol { width: 24px; height: 24px; flex: 0 0 auto; }
+.sp-gruppe-erklaerung { margin: 0 0 12px; }
+.sp-gruppe-leer { margin: 0; padding: 12px 14px; border: 1px dashed color-mix(in srgb, var(--sp-farbe) 45%, transparent); border-radius: var(--fahnas-radius, 8px); }
+.sp-karte.sp-art-sicherung, .sp-karte.sp-art-spiegelung { border-left: 4px solid var(--sp-farbe); }
+.sp-art-plakette { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 8px; border-radius: 999px; font-size: 0.82rem; font-weight: 700; white-space: nowrap;
+  color: var(--sp-farbe); background: color-mix(in srgb, var(--sp-farbe) 16%, transparent); border: 1px solid color-mix(in srgb, var(--sp-farbe) 40%, transparent); }
+.sp-art-plakette .sp-art-symbol { width: 15px; height: 15px; }
+.sp-richtung { font-size: 0.78rem; color: var(--fahnas-text-schwach, #6b7280); white-space: nowrap; }
+.sp-ordner-leiste { margin-top: 8px; }
+.sp-ordner-neu { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sp-ordner-neu input { flex: 1 1 180px; min-width: 0; }
+/* Karten im Raster bündig: .karte + .karte (stil.css) schob jede zweite Karte nach unten */
+.sp-liste > .karte.sp-karte { margin: 0; }

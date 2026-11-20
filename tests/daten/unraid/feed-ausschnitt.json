@@ -1,0 +1,1137 @@
+{
+ "_hinweis": "Testdaten: Ausschnitt (zehn echte Einträge) aus https://raw.githubusercontent.com/Squidly271/AppFeed/master/applicationFeed.json, Stand 2026-09-25 08:10, für tests/einheit/apps_unraid.test.js. Inhalte gehören den jeweiligen Vorlagenautoren; nur als Testdaten verwendet.",
+ "last_updated": "2026-09-25 08:10",
+ "last_updated_timestamp": 1790338240,
+ "apps": 10,
+ "categories": [
+  {
+   "Cat": "AI:",
+   "Des": "AI"
+  },
+  {
+   "Cat": "Backup:",
+   "Des": "Backup"
+  },
+  {
+   "Cat": "Cloud:",
+   "Des": "Cloud"
+  }
+ ],
+ "applist": [
+  {
+   "Name": "Dozzle",
+   "Repository": "amir20/dozzle",
+   "Registry": "https://hub.docker.com/r/amir20/dozzle/",
+   "Network": "bridge",
+   "Support": "https://forums.unraid.net/topic/87798-support-selfhostersnets-template-repository/",
+   "Project": "https://github.com/amir20/dozzle",
+   "Overview": "Dozzle is a real-time log viewer for docker containers. As of v6.x, a new Authentication mechanism is in place that requires you to create a /data/users.yml file as described in https://github.com/amir20/dozzle/issues/2630",
+   "WebUI": "http://[IP]:[PORT:8080]/",
+   "Icon": "https://raw.githubusercontent.com/selfhosters/unRAID-CA-templates/master/templates/img/dozzle.png",
+   "Config": [
+    {
+     "@attributes": {
+      "Name": "WebUI",
+      "Target": "8080",
+      "Default": "8080",
+      "Mode": "tcp",
+      "Description": "Container Port: 8080",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Docker Logs",
+      "Target": "/var/run/docker.sock",
+      "Default": "/var/run/docker.sock",
+      "Mode": "ro",
+      "Description": "Container Path: /var/run/docker.sock",
+      "Type": "Path",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Base URL",
+      "Target": "DOZZLE_BASE",
+      "Default": "/",
+      "Mode": "",
+      "Description": "Container Variable: DOZZLE_BASE",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Log Level",
+      "Target": "DOZZLE_LEVEL",
+      "Default": "info",
+      "Mode": "",
+      "Description": "Container Variable: DOZZLE_LEVEL",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Log Tailsize",
+      "Target": "DOZZLE_TAILSIZE",
+      "Default": "300",
+      "Mode": "",
+      "Description": "Container Variable: DOZZLE_TAILSIZE",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "/data",
+      "Target": "/data",
+      "Default": "/mnt/user/appdata/dozzle/",
+      "Mode": "rw",
+      "Description": "/data directory for /data/users.yml",
+      "Type": "Path",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Authentication",
+      "Target": "DOZZLE_AUTH_PROVIDER",
+      "Default": "simple",
+      "Mode": "",
+      "Description": "Container Variable: DOZZLE_AUTH_PROVIDER",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Secret Key",
+      "Target": "DOZZLE_KEY",
+      "Default": "9Q9SJ69MZhZ0WrjbF",
+      "Mode": "",
+      "Description": "Container Variable: DOZZLE_KEY . Dozzle uses this to make session tokens. If you expose dozzle on the internet, you need to change this, since the default secret is well known",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Disable Analytics",
+      "Target": "DOZZLE_NO_ANALYTICS",
+      "Default": "true",
+      "Mode": "",
+      "Description": "Container Variable: DOZZLE_NO_ANALYTICS . Dozzle collects anonymous user configurations using Google Analytics.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    }
+   ],
+   "TemplateURL": "https://raw.githubusercontent.com/selfhosters/unRAID-CA-templates/master/templates/dozzle.xml",
+   "TemplatePath": "/tmp/GitHub/AppFeed/templates/dozzle.xml",
+   "Repo": "Selfhosters Unraid Discord Repository",
+   "RepoShort": "Selfhosters",
+   "CategoryList": [
+    "Tools-Utilities"
+   ],
+   "stars": 146,
+   "downloads": 338039861,
+   "downloadtrend": [
+    284230289,
+    291084434,
+    298151006,
+    312456166,
+    316471210,
+    327303905,
+    338039861
+   ],
+   "trending": 3.176,
+   "trends": [
+    2.36,
+    2.355,
+    2.37,
+    4.578,
+    1.269,
+    3.31,
+    3.176
+   ],
+   "trendsDate": [
+    1771413090,
+    1774012284,
+    1776611428,
+    1780603496,
+    1783209834,
+    1785926957,
+    1788523586
+   ],
+   "FirstSeen": 1602173315,
+   "LastUpdate": 1788291466,
+   "LastUpdateScan": 1788523586,
+   "topTrending": 0.8160000000000003,
+   "topPerforming": 3.176
+  },
+  {
+   "Name": "vaultwarden",
+   "Repository": "vaultwarden/server",
+   "Registry": "https://hub.docker.com/r/vaultwarden/server/",
+   "Network": "bridge",
+   "Privileged": "false",
+   "Support": "https://forums.unraid.net/topic/88086-support-vaultwarden-formerly-bitwarden_rs/",
+   "Project": "https://github.com/dani-garcia/vaultwarden/",
+   "Branch": [
+    {
+     "Tag": "latest",
+     "TagDescription": "The \"default image\", runs on amd64. (x86, 64bit)"
+    },
+    {
+     "Tag": "alpine",
+     "TagDescription": "Alpine-based amd64 image, same as above but a little bit smaller."
+    }
+   ],
+   "Overview": "Vaultwarden (formerly bitwarden_rs) is a Bitwarden server API implementation written in Rust compatible with upstream Bitwarden clients, perfect for self-hosted deployment where running the official resource-heavy service might not be ideal.\r\n    \r\n    Basically full implementation of Bitwarden API is provided including: \r\n    \r\n    -Basic single user functionality\r\n    \r\n    -Organizations support\r\n    \r\n    -Attachments\r\n    \r\n    -Vault API support\r\n    \r\n    -Serving the static files for Vault interface\r\n    #xD;\n    -Website icons API\r\n    \r\n    -Authenticator and U2F support\r\n    \r\n    -YubiKey OTP\r\n    \r\n    For more configuration see the wiki https://github.com/dani-garcia/vaultwarden/wiki",
+   "WebUI": "http://[IP]:[PORT:80]/admin",
+   "TemplateURL": "https://raw.githubusercontent.com/selfhosters/unRAID-CA-templates/master/templates/vaultwarden.xml",
+   "Icon": "https://raw.githubusercontent.com/selfhosters/unRAID-CA-templates/master/templates/img/vaultwarden.png",
+   "Config": [
+    {
+     "@attributes": {
+      "Name": "WebUI HTTP Port",
+      "Target": "80",
+      "Default": "4743",
+      "Mode": "tcp",
+      "Description": "Container Port: 80",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Storage",
+      "Target": "/data",
+      "Default": "/mnt/user/appdata/vaultwarden",
+      "Mode": "rw",
+      "Description": "Container Path: /data",
+      "Type": "Path",
+      "Display": "advanced",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "SIGNUPS_ALLOWED",
+      "Target": "SIGNUPS_ALLOWED",
+      "Default": "true|false",
+      "Description": "Container Variable: Signups",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "INVITATIONS_ALLOWED",
+      "Target": "INVITATIONS_ALLOWED",
+      "Default": "true|false",
+      "Description": "Container Variable: Invitations",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "WEBSOCKET_ENABLED",
+      "Target": "WEBSOCKET_ENABLED",
+      "Default": "false",
+      "Description": "Container Variable: Websockets Enabled",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "ADMIN_TOKEN",
+      "Target": "ADMIN_TOKEN",
+      "Default": "",
+      "Description": "Container Variable: ADMIN_TOKEN",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "true"
+     },
+     "value": ""
+    }
+   ],
+   "TemplatePath": "/tmp/GitHub/AppFeed/templates/vaultwarden.xml",
+   "Repo": "Selfhosters Unraid Discord Repository",
+   "RepoShort": "Selfhosters",
+   "CategoryList": [
+    "Tools-Utilities"
+   ],
+   "Official": true,
+   "Video": "https://www.youtube.com/watch?v=2Go3gmgWxQI",
+   "RecommendedRaw": "10/1/2025",
+   "RecommendedDate": 1759291200,
+   "RecommendedReason": {
+    "en_US": "designed for users who want to run their own private, secure password vault rather than rely on a third-party service"
+   },
+   "RecommendedWho": "SpaceInvader One",
+   "stars": 1488,
+   "downloads": 324345626,
+   "downloadtrend": [
+    263392762,
+    272808426,
+    282980520,
+    290148399,
+    295802136,
+    309149100,
+    324345626
+   ],
+   "trending": 4.317,
+   "trends": [
+    3.075,
+    3.451,
+    3.595,
+    2.47,
+    1.911,
+    4.317,
+    4.685
+   ],
+   "trendsDate": [
+    1773241848,
+    1775841065,
+    1778440316,
+    1781035450,
+    1783627457,
+    1786368799,
+    1788966671
+   ],
+   "FirstSeen": 1619798558,
+   "LastUpdate": 1788016729,
+   "LastUpdateScan": 1788966671,
+   "topTrending": 1.6099999999999994,
+   "topPerforming": 4.317
+  },
+  {
+   "Name": "cncjs",
+   "Repository": "cncjs/cncjs:latest",
+   "Registry": "https://hub.docker.com/r/cncjs/cncjs/",
+   "Network": "bridge",
+   "Shell": "sh",
+   "Privileged": "true",
+   "Support": "https://hub.docker.com/r/cncjs/cncjs/",
+   "Project": "https://github.com/cncjs/cncjs",
+   "Overview": "A full-featured web interface for CNC controllers running Grbl, Marlin, Smoothieware, or TinyG.",
+   "WebUI": "http://[IP]:[PORT:8000]",
+   "TemplateURL": "https://raw.githubusercontent.com/Aquillacomputingsystem/unraid-templetes/main/CNCJS.xml",
+   "Icon": "https://cnc.js.org/logo.png",
+   "Networking": {
+    "Mode": "bridge"
+   },
+   "Config": [
+    {
+     "@attributes": {
+      "Name": "/config",
+      "Target": "/cncjs/",
+      "Default": "",
+      "Mode": "rw",
+      "Description": "Container Path: /opt/cncjs",
+      "Type": "Path",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "/mnt/user/appdata/cncjs"
+    },
+    {
+     "@attributes": {
+      "Name": "port",
+      "Target": "8000",
+      "Default": "",
+      "Mode": "tcp",
+      "Description": "Container Port: 8000",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "8000"
+    },
+    {
+     "@attributes": {
+      "Name": "Webcam",
+      "Target": "",
+      "Default": "",
+      "Mode": "",
+      "Description": "Container Device:",
+      "Type": "Device",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "/dev/"
+    },
+    {
+     "@attributes": {
+      "Name": "CNC",
+      "Target": "",
+      "Default": "",
+      "Mode": "",
+      "Description": "Container Device:",
+      "Type": "Device",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "/dev/"
+    }
+   ],
+   "TemplatePath": "/tmp/GitHub/AppFeed/CNCJS.xml",
+   "Repo": "Alphacosmos' Repository",
+   "CategoryList": [
+    "Tools-Utilities"
+   ],
+   "CAComment": "This template is set up to run as Privileged. This is a possible security risk and usually does not need to be enabled. Note that some applications require privileged in order to operate correctly",
+   "Official": true,
+   "stars": 8,
+   "downloads": 20980,
+   "downloadtrend": [
+    15683,
+    16025,
+    16469,
+    17648,
+    18501,
+    19840,
+    20980
+   ],
+   "trending": 5.434,
+   "trends": [
+    1.996,
+    2.134,
+    2.696,
+    6.681,
+    4.611,
+    6.749,
+    5.434
+   ],
+   "trendsDate": [
+    1771413041,
+    1774012234,
+    1776611378,
+    1779984444,
+    1782746545,
+    1785341103,
+    1787933455
+   ],
+   "FirstSeen": 1667210631,
+   "LastUpdate": 1787245649,
+   "LastUpdateScan": 1787933455,
+   "topTrending": 3.438
+  },
+  {
+   "Name": "Lansweeper-Network-Discovery",
+   "Repository": "ghcr.io/007darkmatter5/lansweeper-network-discovery:latest",
+   "Registry": "https://github.com/007darkmatter5/lansweeper-network-discovery/pkgs/container/lansweeper-network-discovery",
+   "Branch": {
+    "Tag": "latest",
+    "TagDescription": "Latest Hub and IT Sensor release from Lansweeper"
+   },
+   "Network": "host",
+   "Shell": "bash",
+   "Privileged": "false",
+   "Support": "https://github.com/007darkmatter5/lansweeper-network-discovery/issues",
+   "Project": "https://github.com/007darkmatter5/lansweeper-network-discovery",
+   "ReadMe": "https://github.com/007darkmatter5/lansweeper-network-discovery#readme",
+   "TemplateURL": "https://raw.githubusercontent.com/007darkmatter5/unraid-templates/main/templates/lansweeper-network-discovery.xml",
+   "Icon": "https://raw.githubusercontent.com/007darkmatter5/lansweeper-network-discovery/main/docs/icon.png",
+   "WebUI": "https://[IP]:[PORT:59525]/",
+   "Overview": "Unofficial container for Lansweeper Network Discovery. It runs the Hub and the IT Sensor\n    together: the sensor scans your network, and the Hub sends what it finds to your\n    Lansweeper Site. Not affiliated with or supported by Lansweeper.\n\n    The image installs the official Linux packages from Lansweeper's apt repository when it\n    is built, and is rebuilt when Lansweeper releases a new version.\n\n    To link it to your Site, paste the linking code from your Site (Discovery > Discovery\n    systems > Link discovery system) into Linking Code, or link it from the web UI after\n    the first start. The web UI uses a self-signed certificate.\n\n    First start: open https://your-server:59526/ (the Setup Port) and set the admin\n    password. The Hub only allows this from the server itself, so the container relays that\n    port locally until the password is set, then closes it. After that, use the WebUI link.\n\n    Host networking is required for discovery to see your LAN. Keep appdata on cache or an\n    SSD: the Hub uses a SQLite database, and SQLite over a network share is unreliable.",
+   "ExtraSearchTerms": "lansweeper asset inventory network discovery scanner itam",
+   "ExtraParams": "--cap-add=NET_RAW --cap-add=NET_ADMIN --stop-timeout=60",
+   "Requires": "A Lansweeper Site (https://app.lansweeper.com). amd64 only.",
+   "Date": "2026-09-24",
+   "Config": [
+    {
+     "@attributes": {
+      "Name": "App Data",
+      "Target": "/config",
+      "Default": "/mnt/user/appdata/lansweeper-network-discovery",
+      "Mode": "rw",
+      "Description": "Hub database, certificate, settings and logs, and the sensor's settings. Put this on cache or an SSD.",
+      "Type": "Path",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "/mnt/user/appdata/lansweeper-network-discovery"
+    },
+    {
+     "@attributes": {
+      "Name": "Linking Code",
+      "Target": "LINKING_CODE",
+      "Default": "",
+      "Mode": "",
+      "Description": "Optional. Linking code from your Lansweeper Site. Applied once; changing it applies the new code. Leave empty to link from the web UI instead.",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "true"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Hub HTTPS Port",
+      "Target": "HUB_PORT",
+      "Default": "59525",
+      "Mode": "",
+      "Description": "Port for the Hub web UI and the sensor connection. With host networking this is the port on the server.",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "59525"
+    },
+    {
+     "@attributes": {
+      "Name": "Setup Port",
+      "Target": "SETUP_PORT",
+      "Default": "59526",
+      "Mode": "",
+      "Description": "Open https://your-server:59526/ once to set the admin password. The port is only open until the password is set. Set to 0 to disable it.",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "59526"
+    },
+    {
+     "@attributes": {
+      "Name": "Passive Only",
+      "Target": "PASSIVE_ONLY",
+      "Default": "",
+      "Mode": "",
+      "Description": "Leave empty to use active scanning on first start and keep whatever you set in the Hub UI after that. true = listen passively only, false = active scanning.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Enable IT Sensor",
+      "Target": "ENABLE_SENSOR",
+      "Default": "true",
+      "Mode": "",
+      "Description": "Run the IT Sensor alongside the Hub. Set to false for a Hub only.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "true"
+    },
+    {
+     "@attributes": {
+      "Name": "Hub Code",
+      "Target": "HUB_CODE",
+      "Default": "",
+      "Mode": "",
+      "Description": "Optional. Hub code for pairing the sensor, if the Hub UI asks for one.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "true"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Hub Hostname",
+      "Target": "HUB_HOSTNAME",
+      "Default": "",
+      "Mode": "",
+      "Description": "Optional. Hostname the Hub listens on and advertises. Defaults to the server's hostname.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Log Level",
+      "Target": "LOG_LEVEL",
+      "Default": "Information",
+      "Mode": "",
+      "Description": "Verbose, Debug, Information, Warning or Error.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "Information"
+    },
+    {
+     "@attributes": {
+      "Name": "Timezone",
+      "Target": "TZ",
+      "Default": "Etc/UTC",
+      "Mode": "",
+      "Description": "Timezone for log timestamps.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "Etc/UTC"
+    }
+   ],
+   "TemplatePath": "/tmp/GitHub/AppFeed/templates/lansweeper-network-discovery.xml",
+   "Repo": "007Darkmatter5's Repository",
+   "CategoryList": [
+    "Network-Management",
+    "Tools-Utilities"
+   ],
+   "FirstSeen": 1790266484
+  },
+  {
+   "Name": "brigata-studio2go",
+   "Repository": "ghcr.io/0xc/brigata-studio2go:latest",
+   "Registry": "https://ghcr.io/0xc/brigata-studio2go",
+   "TemplateURL": "https://raw.githubusercontent.com/0xC/brigata-studio2go-unraid/main/brigata-studio2go.xml",
+   "Network": "bridge",
+   "Privileged": "false",
+   "Support": "https://github.com/0xC/brigata-studio2go-unraid/issues",
+   "Project": "https://github.com/0xC/brigata-studio2go",
+   "Overview": "A private, self-hosted Brigata AI agent + Studio that runs entirely on your Unraid box. No cloud dependency and no inbound connection required — you reach it on your LAN. The only outbound traffic is to the Anthropic API for the model (your key). Password login; embedded Postgres persisted to appdata.",
+   "WebUI": "http://[IP]:[PORT:3030]/",
+   "Icon": "https://brigata.ai/favicon.png",
+   "Networking": {
+    "Mode": "bridge"
+   },
+   "Config": [
+    {
+     "@attributes": {
+      "Name": "WebUI Port",
+      "Target": "3030",
+      "Default": "3030",
+      "Mode": "tcp",
+      "Description": "Port the Studio web UI + API listen on",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "3030"
+    },
+    {
+     "@attributes": {
+      "Name": "Data (Postgres + config)",
+      "Target": "/var/lib/postgresql",
+      "Default": "/mnt/user/appdata/brigata-studio2go",
+      "Mode": "rw",
+      "Description": "Persistent data — the embedded database and generated config. Survives updates.",
+      "Type": "Path",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "/mnt/user/appdata/brigata-studio2go"
+    },
+    {
+     "@attributes": {
+      "Name": "Admin password",
+      "Target": "STANDALONE_ADMIN_PASSWORD",
+      "Default": "",
+      "Mode": "",
+      "Description": "The login password for the admin user (set on first boot)",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "true"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Anthropic API key",
+      "Target": "ANTHROPIC_API_KEY",
+      "Default": "",
+      "Mode": "",
+      "Description": "sk-ant-api03-... or sk-ant-oat01-... — used only when the agent runs",
+      "Type": "Variable",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "true"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Homelab access (optional)",
+      "Target": "/mnt/user",
+      "Default": "/mnt/user",
+      "Mode": "rw",
+      "Description": "OPTIONAL: mount your shares so the agent can read/manage files (e.g. Frigate config). Remove to keep it isolated.",
+      "Type": "Path",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Docker control (optional, powerful)",
+      "Target": "/var/run/docker.sock",
+      "Default": "/var/run/docker.sock",
+      "Mode": "rw",
+      "Description": "OPTIONAL + ROOT-EQUIVALENT: lets the agent create/manage containers (e.g. set up an NVR). Only enable if you want that.",
+      "Type": "Path",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": ""
+    }
+   ],
+   "TemplatePath": "/tmp/GitHub/AppFeed/brigata-studio2go.xml",
+   "Repo": "brigata.ai's Repository",
+   "CategoryList": [
+    "Productivity",
+    "Tools-Utilities",
+    "HomeAutomation"
+   ],
+   "FirstSeen": 1783951364
+  },
+  {
+   "Name": "Alarm-HUB",
+   "Repository": "ghcr.io/2crazytv/alarm-hub:latest",
+   "Registry": "https://ghcr.io/2crazytv/alarm-hub",
+   "Network": "bridge",
+   "Shell": "bash",
+   "Privileged": "false",
+   "Icon": "https://github.com/2CrAzYTV/Alarm-HUB/raw/refs/heads/main/icon.png",
+   "WebUI": "http://[IP]:[PORT:8080]/",
+   "Overview": "Alarm-HUB is a standalone multi-user alarm service with manual alarms, mobile API access, optional WebComm Calendar Sync integration, direct WebComm import, and optional commute-aware alarms. PostgreSQL is embedded by default, so a normal Unraid installation requires only one container. Persistent application and database data are stored below /config.",
+   "Support": "https://github.com/2CrAzYTV/Alarm-HUB/issues",
+   "Project": "https://github.com/2CrAzYTV/Alarm-HUB",
+   "TemplateURL": "https://raw.githubusercontent.com/2CrAzYTV/unraid-community-apps/main/templates/alarm-hub.xml",
+   "ReadMe": "https://raw.githubusercontent.com/2CrAzYTV/Alarm-HUB/main/README.md",
+   "ExtraSearchTerms": "alarm alarms wecker webcomm schedule shortcut ios automation commute routing",
+   "Requires": "No separate PostgreSQL container is required for the default embedded database mode. For public Internet access, use a reverse proxy with a valid HTTPS certificate and enable secure session cookies. Commute routing is optional; OpenRouteService is used for address lookup plus Auto/Fahrrad routing, while Bus/Bahn uses the free open-source Transitous service.",
+   "Date": "2026-08-23",
+   "MinVer": "6.12",
+   "License": "MIT",
+   "ExtraParams": "--restart unless-stopped",
+   "Config": [
+    {
+     "@attributes": {
+      "Name": "WebUI Port",
+      "Target": "8080",
+      "Default": "8080",
+      "Mode": "tcp",
+      "Description": "HTTP port for the Alarm-HUB WebUI.",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "8080"
+    },
+    {
+     "@attributes": {
+      "Name": "Appdata",
+      "Target": "/config",
+      "Default": "/mnt/user/appdata/alarm-hub",
+      "Mode": "rw",
+      "Description": "Persistent Alarm-HUB data, including the embedded PostgreSQL database and generated application secret.",
+      "Type": "Path",
+      "Display": "always",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "/mnt/user/appdata/alarm-hub"
+    },
+    {
+     "@attributes": {
+      "Name": "Database Mode",
+      "Target": "DATABASE_MODE",
+      "Default": "embedded",
+      "Mode": "",
+      "Description": "embedded = integrated PostgreSQL database (recommended); external = use your own PostgreSQL server.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "embedded"
+    },
+    {
+     "@attributes": {
+      "Name": "External Database URL",
+      "Target": "DATABASE_URL",
+      "Default": "",
+      "Mode": "",
+      "Description": "Only required for DATABASE_MODE=external. Example: postgresql+psycopg://user:password@host:5432/database",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "true"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Secret Key",
+      "Target": "SECRET_KEY",
+      "Default": "",
+      "Mode": "",
+      "Description": "Optional in embedded mode: when left empty Alarm-HUB creates and persists a strong secret under /config. Set and keep a fixed value for external/managed deployments if desired.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "true"
+     },
+     "value": ""
+    },
+    {
+     "@attributes": {
+      "Name": "Default Timezone",
+      "Target": "DEFAULT_TIMEZONE",
+      "Default": "Europe/Berlin",
+      "Mode": "",
+      "Description": "Default timezone for new users.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "Europe/Berlin"
+    },
+    {
+     "@attributes": {
+      "Name": "Secure Session Cookies",
+      "Target": "SESSION_HTTPS_ONLY",
+      "Default": "false",
+      "Mode": "",
+      "Description": "Default false for direct local HTTP access in Unraid. Set true when Alarm-HUB is published through an HTTPS reverse proxy.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "true",
+      "Mask": "false"
+     },
+     "value": "false"
+    },
+    {
+     "@attributes": {
+      "Name": "OpenRouteService API Key",
+      "Target": "OPENROUTESERVICE_API_KEY",
+      "Default": "",
+      "Mode": "",
+      "Description": "Optional. Required for commute routing because Alarm-HUB uses OpenRouteService for address lookup and for Auto/Fahrrad routes. Bus/Bahn itself is routed through Transitous and needs no extra API key.",
+      "Type": "Variable",
+      "Display": "advanced",
+      "Required": "false",
+      "Mask": "true"
+     },
+     "value": ""
+    }
+   ],
+   "TemplatePath": "/tmp/GitHub/AppFeed/templates/alarm-hub.xml",
+   "Repo": "2CrAzY's Repository",
+   "CategoryList": [
+    "Tools-Utilities"
+   ],
+   "ChangeLogPresent": "1",
+   "FirstSeen": 1787472328
+  },
+  {
+   "Name": "blueiris",
+   "Repository": "jshridha/blueiris:gpu",
+   "Registry": "https://hub.docker.com/r/jshridha/blueiris/",
+   "Network": "bridge",
+   "Shell": "sh",
+   "Privileged": "true",
+   "Support": "https://forums.unraid.net/topic/100915-support-a75g-blueiris/",
+   "Project": "https://hub.docker.com/r/jshridha/blueiris/",
+   "Overview": "Blue Iris video security software runs on a PC and can provide recording and playback for up to 64 IP network cameras or webcams. Blue Iris is affordable and powerful enough to safeguard your family, property and valuables at home or work.",
+   "WebUI": "http://[IP]:[PORT:8080]/",
+   "TemplateURL": "https://raw.githubusercontent.com/A75G/docker-templates/master/templates/deprecated/blueiris.xml",
+   "Icon": "https://raw.githubusercontent.com/A75G/docker-templates/master/templates/icons/blueiris.png",
+   "ExtraParams": "--init --log-opt max-size=5m --log-opt max-file=2",
+   "Config": [
+    {
+     "@attributes": {
+      "Name": "VNC Web Server Port",
+      "Target": "8080",
+      "Default": "8080",
+      "Mode": "tcp",
+      "Description": "VNC Web Server Port",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "8080"
+    },
+    {
+     "@attributes": {
+      "Name": "VNC Server Port",
+      "Target": "5900",
+      "Default": "5950",
+      "Mode": "tcp",
+      "Description": "VNC Server Port",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "5950"
+    },
+    {
+     "@attributes": {
+      "Name": "Web Server Port",
+      "Target": "81",
+      "Default": "8181",
+      "Mode": "tcp",
+      "Description": "Web Server Port",
+      "Type": "Port",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "8181"
+    },
+    {
+     "@attributes": {
+      "Name": "Data Path",
+      "Target": "/home/wineuser/prefix",
+      "Default": "/mnt/user/appdata/blueiris",
+      "Mode": "rw",
+      "Description": "Data Path",
+      "Type": "Path",
+      "Display": "always",
+      "Required": "false",
+      "Mask": "false"
+     },
+     "value": "/mnt/user/appdata/blueiris"
+    }
+   ],
+   "Deprecated": true,
+   "TemplatePath": "/tmp/GitHub/AppFeed/templates/deprecated/blueiris.xml",
+   "Repo": "A75G's Repository",
+   "CategoryList": [
+    "Security"
+   ],
+   "CAComment": "This template is set up to run as Privileged. This is a possible security risk and usually does not need to be enabled. Note that some applications require privileged in order to operate correctly",
+   "stars": 32,
+   "downloads": 543991,
+   "downloadtrend": [
+    540158,
+    540734,
+    541408,
+    542264,
+    542910,
+    543401,
+    543991
+   ],
+   "trending": 0.108,
+   "trends": [
+    0.116,
+    0.107,
+    0.124,
+    0.158,
+    0.119,
+    0.09,
+    0.108
+   ],
+   "trendsDate": [
+    1771413100,
+    1774012296,
+    1776611439,
+    1779984444,
+    1782746545,
+    1785341103,
+    1787933455
+   ],
+   "FirstSeen": 1610133117,
+   "LastUpdate": 1613192794,
+   "LastUpdateScan": 1787933455,
+   "topTrending": -0.008000000000000007,
+   "topPerforming": 0.108
+  },
+  {
+   "Name": "backuppc",
+   "Repository": "tiredofit/backuppc:latest",
+   "Registry": "https://hub.docker.com/r/tiredofit/backuppc/",
+   "Support": "https://forums.unraid.net/topic/89502-support-a75g-repo/",
+   "Project": "https://backuppc.github.io/backuppc/index.html",
+   "TemplateURL": "https://raw.githubusercontent.com/A75G/docker-templates/master/templates/backuppc.xml",
+   "Icon": "https://raw.githubusercontent.com/A75G/docker-templates/master/templates/icons/backuppc.png",
+   "TemplatePath": "/tmp/GitHub/AppFeed/templates/backuppc.xml",
+   "Repo": "A75G's Repository",
+   "CategoryList": [
+    "Backup",
+    "Network-Web"
+   ],
+   "Blacklist": true,
+   "ModeratorComment": "Blacklisted: Unable to be pulled",
+   "Overview": "BackupPC is a high-performance, enterprise-grade system for backing up Linux, Windows and macOS PCs and laptops to a server's disk.",
+   "downloads": 218954,
+   "downloadtrend": [
+    214741,
+    215169,
+    215763,
+    216220,
+    216738,
+    217599,
+    218954
+   ],
+   "trending": 0.619,
+   "trends": [
+    0.279,
+    0.199,
+    0.275,
+    0.211,
+    0.239,
+    0.396,
+    0.619
+   ],
+   "trendsDate": [
+    1761016169,
+    1763615385,
+    1766214567,
+    1768813863,
+    1771413103,
+    1774012298,
+    1776611441
+   ],
+   "stars": 9,
+   "FirstSeen": 1589227646,
+   "LastUpdate": 1716570570,
+   "LastUpdateScan": 1776611441,
+   "topTrending": 0.33999999999999997,
+   "topPerforming": 0.619
+  },
+  {
+   "PluginURL": "https://raw.githubusercontent.com/BGriffin63/ReelSentry/main/reelsentry.plg",
+   "PluginAuthor": "BGriffin63",
+   "Beta": "true",
+   "Name": "ReelSentry",
+   "Support": "https://github.com/BGriffin63/ReelSentry/issues",
+   "Project": "https://github.com/BGriffin63/ReelSentry",
+   "Icon": "https://raw.githubusercontent.com/BGriffin63/ReelSentry/main/assets/reelsentry-128.png",
+   "TemplateURL": "https://raw.githubusercontent.com/BGriffin63/ReelSentry/main/reelsentry.xml",
+   "TemplatePath": "/tmp/GitHub/AppFeed/reelsentry.xml",
+   "Repo": "BGriffin63's Repository",
+   "Overview": "ReelSentry monitors your Unraid virtual machines and tells you when something changes — a VM starts, stops, shuts down, crashes, pauses, resumes, or reboots. It watches VM lifecycle events through a namespaced libvirt hook that coexists safely with other plugins, records a local event history, and sends alerts through Unraid's native notification system and/or a Discord webhook (no bot required). Optional agentless health checks (ICMP ping, TCP port, QEMU guest agent) tell you when a VM is running but not actually responding, with anti-spam thresholds. Fail-open by design: a problem inside ReelSentry can never stop a VM from starting or changing state. No telemetry, no inbound ports, no VM XML changes. ReelSentry is an independent community project and is not affiliated with or endorsed by Lime Technology, Inc.",
+   "Repository": "https://raw.githubusercontent.com/BGriffin63/ReelSentry/main/reelsentry.plg",
+   "CategoryList": [
+    "Tools-Utilities",
+    "Plugins"
+   ],
+   "Plugin": true,
+   "pluginVersion": "0.2.3",
+   "MinVer": "7.2.0",
+   "Author": "BGriffin63",
+   "ChangeLogPresent": "1",
+   "downloads": 34,
+   "FirstSeen": 1785341103,
+   "LastUpdateScan": 1789747625,
+   "pluginStats": {
+    "10": 0,
+    "11": 0,
+    "12": 0,
+    "01": 0,
+    "02": 0,
+    "03": 0,
+    "04": 0,
+    "05": 0,
+    "06": 0,
+    "07": 18,
+    "08": 11,
+    "09": 5,
+    "T": 34
+   }
+  },
+  {
+   "LanguageURL": "https://github.com/unraid/lang-da_DA/archive/master.zip",
+   "Language": "Danish",
+   "LanguageLocal": "Dansk",
+   "LanguagePack": "da_DA",
+   "Author": "Jazper",
+   "Name": "Dansk sprogpakke",
+   "TemplateURL": "https://raw.githubusercontent.com/unraid/language-templates/master/limetech/lang-da_DA.xml",
+   "Version": "2023.11.28",
+   "Icon": "https://raw.githubusercontent.com/unraid/language-templates/master/limetech/Green-Earth-Transparent-File.png",
+   "Support": "https://forums.unraid.net/forum/75-multi-language-section/",
+   "TemplatePath": "/tmp/GitHub/AppFeed/limetech/lang-da_DA.xml",
+   "Repo": "Official Unraid Repository",
+   "RepoShort": "Unraid",
+   "RepoURL": "https://github.com/unraid/language-templates",
+   "LTOfficial": true,
+   "Description": "Dette er en dansk oversættelse for Unraid og understøttet stik.\n\n***Work in Progress***\n\nThis is a Danish translation for Unraid and supported plugins.",
+   "InfoLanguage": "Click for more information",
+   "InstallLanguage": "Install Language Pack",
+   "SupportClickLanguage": "Go to the support thread",
+   "SupportLanguage": "Support",
+   "SwitchLanguage": "Switch to this language",
+   "UpdateLanguage": "Update Language Pack",
+   "disclaimLanguage": "DISCLAIMER",
+   "disclaimLine1": "A note about translations",
+   "disclaimLineLink": "https://forums.unraid.net/topic/93770-unraid-webgui-translations-disclaimer/",
+   "Project": "",
+   "ReadMe": "",
+   "FirstSeen": 1652025793,
+   "LastUpdateScan": 1778721107
+  }
+ ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "vaultwarden",
+  "name": "Vaultwarden",
+  "beschreibung": "Schlanker, mit Bitwarden kompatibler Passwortserver: nutze die offiziellen Bitwarden-Apps und Browser-Erweiterungen mit deinem eigenen Tresor auf dem NAS.",
+  "kategorie": "Sicherheit",
+  "symbol": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/vaultwarden.png",
+  "quelle": "eingebaut",
+  "dokumentation": "https://github.com/dani-garcia/vaultwarden/wiki/Using-Docker-Compose",
+  "webui": "http://{HOST}:{PORT_WEB}",
+  "compose": "services:\n  vaultwarden:\n    image: vaultwarden/server:latest\n    restart: unless-stopped\n    ports:\n      - \"${PORT_WEB}:80\"\n    environment:\n      - SIGNUPS_ALLOWED=${REGISTRIERUNG}\n      - DOMAIN=${DOMAIN}\n    volumes:\n      - \"${PFAD_DATEN}:/data\"\n",
+  "felder": [
+    {
+      "name": "PORT_WEB",
+      "art": "port",
+      "standard": 8222,
+      "beschriftung": "Port der Weboberfläche",
+      "erklaerung": "Unter diesem Port erreichst du die Weboberfläche im Heimnetz (http://<NAS>:<Port>). Ist der Port schon belegt, schlägt FAH-NAS einen freien vor."
+    },
+    {
+      "name": "REGISTRIERUNG",
+      "art": "schalter",
+      "standard": true,
+      "beschriftung": "Registrierung erlauben",
+      "erklaerung": "An = jeder, der die Seite erreicht, kann ein Konto anlegen. Nach dem Anlegen deiner Konten ausschalten (Einstellungen der App → Ändern)."
+    },
+    {
+      "name": "DOMAIN",
+      "art": "variable",
+      "standard": "http://localhost",
+      "beschriftung": "Öffentliche Adresse",
+      "erklaerung": "Die Adresse mit Protokoll, unter der die Apps den Server erreichen, z. B. https://tresor.example.de. Nötig für Anhänge, E-Mail-Links und WebAuthn. Muss mit http:// oder https:// beginnen – sonst startet Vaultwarden nicht; der Standard gilt nur zum Testen."
+    },
+    {
+      "name": "PFAD_DATEN",
+      "art": "pfad",
+      "standard": "daten",
+      "beschriftung": "Datenordner",
+      "erklaerung": "Hier liegen die SQLite-Datenbank mit den verschlüsselten Tresoren, Anhänge und Symbole. Standard ist ein Ordner im App-Verzeichnis unter /data/apps – so bleiben die Daten bei Aktualisierungen erhalten und sind in den Schnappschüssen enthalten."
+    }
+  ],
+  "hinweise": [
+    "Die Bitwarden-Apps und der Web-Tresor verlangen HTTPS (Web-Crypto). Über http://<NAS>:<Port> funktioniert nur ein erster Test – für den Betrieb einen Reverse-Proxy mit Zertifikat davor setzen und dessen Adresse als Öffentliche Adresse eintragen.",
+    "Die Admin-Seite (/admin) ist ohne ADMIN_TOKEN aus – bei Bedarf in der Compose-Datei ergänzen."
+  ]
+}
