@@ -596,7 +596,7 @@
   "gehaeuse_watchdog_schutz": "Neustart bei Systemhänger",
   "gehaeuse_watchdog_schutz_erklaerung": "Hängt das ganze System drei Minuten lang, startet der Watchdog das NAS neu – wie unter UGOS. Aus: Der Watchdog wird nur am Leben gehalten und löst nie aus.",
   "fahgit_titel": "Verbindung zu FAH-Git",
-  "fahgit_erklaerung": "Einmal einrichten, gilt für alle Projekte: FAH-NAS liest damit Projekte und Zweige aus FAH-Git und baut sie unter Apps → „Aus FAH-Git bauen“ als Docker-App.",
+  "fahgit_erklaerung": "Optional – nur nötig, wenn du einen eigenen FAH-Git-Server betreibst. Einmal einrichten, gilt für alle Projekte: FAH-NAS liest damit Projekte und Zweige aus FAH-Git und baut sie unter Apps → „Aus FAH-Git bauen“ als Docker-App. Knopf und Dashboard-Kachel dazu erscheinen erst mit eingerichteter Verbindung.",
   "fahgit_laden": "Verbindung wird geladen …",
   "fahgit_nicht_eingerichtet": "Noch keine Verbindung eingerichtet.",
   "fahgit_ungeprueft": "Verbindung gespeichert, aber noch nicht geprüft.",

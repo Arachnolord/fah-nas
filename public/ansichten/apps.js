@@ -261,11 +261,18 @@ export default {
 
     // ---- Installierte Apps -----------------------------------------------------------------------------------
     const listeInstalliert = el('div', { klasse: 'ap-liste' });
+    // „Aus FAH-Git bauen“ erst, wenn eine Verbindung eingerichtet ist oder schon Apps aus FAH-Git laufen – FAH-Git ist
+    // nicht öffentlich, wer FAH-NAS von GitHub installiert, sähe sonst eine Funktion ohne Gegenstelle (Betreiber 23.11.).
+    const fgKnopf = knopf(t('apps.fg_knopf'), { art: 'zweit', titel: t('apps.fg_kurz'), beiKlick: () => dialogFahgit() });
+    const fgErklaerung = el('p', { klasse: 'erklaerung', text: t('apps.fg_kurz') });
+    const fgZeigen = (ja) => { fgKnopf.hidden = !ja; fgErklaerung.hidden = !ja; };
+    fgZeigen(false);
+    if (admin) api(ctx, 'fahgit.verbindung', {}).then((v) => { if (v && v.eingerichtet) fgZeigen(true); }).catch(() => {});
     if (admin) {
       panelInstalliert.appendChild(el('div', { klasse: 'ap-werkzeuge' },
-        el('div', { klasse: 'vw-knopfleiste' }, knopf(t('apps.fg_knopf'), { art: 'zweit', titel: t('apps.fg_kurz'), beiKlick: () => dialogFahgit() }), knopf(t('apps.zip_knopf'), { art: 'zweit', beiKlick: () => dialogZip() }),
+        el('div', { klasse: 'vw-knopfleiste' }, fgKnopf, knopf(t('apps.zip_knopf'), { art: 'zweit', beiKlick: () => dialogZip() }),
           knopf(t('apps.ue_knopf'), { art: 'zweit', titel: t('apps.ue_kurz'), beiKlick: () => dialogUebernahme(ctx, t, fmt, { belegt: apps.map((x) => x.name), nachher: () => ladeApps(true) }) })),
-        el('p', { klasse: 'erklaerung', text: t('apps.fg_kurz') }),
+        fgErklaerung,
         el('p', { klasse: 'erklaerung', text: t('apps.zip_kurz') }),
         el('p', { klasse: 'erklaerung', text: t('apps.ue_kurz') })));
     }
@@ -290,6 +297,7 @@ export default {
       apps = listeAus(r, 'apps');
       reiterInstalliert.textContent = apps.length ? `${t('apps.reiter_installiert')} (${apps.length})` : t('apps.reiter_installiert');
       zeigeApps();
+      if (admin && apps.some((a) => a.fahgit)) fgZeigen(true);
       if (admin && apps.some((a) => a.fahgit)) {
         // Stand in FAH-Git (Agent fragt höchstens jede Minute nach) – kommt nach, die Liste steht schon
         api(ctx, 'apps.fahgit.stand', {}).then((st) => {

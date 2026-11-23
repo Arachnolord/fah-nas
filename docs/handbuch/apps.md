@@ -173,7 +173,7 @@ Anmeldung der App. Richte deshalb in jeder App, die Daten enthält, eine Anmeldu
 
 ## 10. Aus FAH-Git bauen
 
-Eigene Projekte, die in FAH-Git liegen, baut FAH-NAS direkt als App – ohne ZIP herunter- und hochzuladen.
+Eigene Projekte, die in FAH-Git liegen, baut FAH-NAS direkt als App – ohne ZIP herunter- und hochzuladen. Nur nötig, wenn du einen eigenen FAH-Git-Server betreibst: Der Knopf „Aus FAH-Git bauen“ und die Dashboard-Kachel erscheinen erst, wenn die Verbindung eingerichtet ist.
 
 1. **Einmal verbinden:** In FAH-Git unter „Mein Konto“ einen Zugangsschlüssel **„Nur lesen“** anlegen. In FAH-NAS unter
    **System → Grundlagen → Verbindung zu FAH-Git** die Adresse (z. B. `http://nas.local:3300`) und den Schlüssel eintragen,

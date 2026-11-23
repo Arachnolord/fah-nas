@@ -929,6 +929,7 @@ export function registriere(reg, werkzeuge) {
       const stand = await fahgit.pruefen(neu);
       neu.geprueft = { zeit: new Date().toISOString(), ok: true, ...stand };
       await w.konfig.speichern(fahgit.FAHGIT_DATEI, neu);
+      fahgitStandCache = { zeit: 0, daten: null }; // Kachel/Knopf sollen die neue Verbindung sofort sehen
       return fahgit.verbindungAnsicht(neu);
     },
   });
@@ -948,7 +949,7 @@ export function registriere(reg, werkzeuge) {
 
   reg.aktion('fahgit.verbindung.loeschen', {
     rolle: 'admin', schema: {}, beschreibung: 'Verbindung zu FAH-Git entfernen (gebaute Apps bleiben, nur Aktualisieren aus FAH-Git geht nicht mehr)',
-    ausfuehren: async () => { await w.konfig.speichern(fahgit.FAHGIT_DATEI, { version: 1, adresse: '', token: '' }); return fahgit.verbindungAnsicht(null); },
+    ausfuehren: async () => { await w.konfig.speichern(fahgit.FAHGIT_DATEI, { version: 1, adresse: '', token: '' }); fahgitStandCache = { zeit: 0, daten: null }; return fahgit.verbindungAnsicht(null); },
   });
 
   reg.aktion('fahgit.projekte', {

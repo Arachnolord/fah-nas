@@ -596,7 +596,7 @@
   "gehaeuse_watchdog_schutz": "Restart on system hang",
   "gehaeuse_watchdog_schutz_erklaerung": "If the whole system hangs for three minutes, the watchdog restarts the NAS – as under UGOS. Off: the watchdog is only kept alive and never fires.",
   "fahgit_titel": "Connection to FAH-Git",
-  "fahgit_erklaerung": "Set up once, works for all projects: FAH-NAS reads projects and branches from FAH-Git and builds them as Docker apps under Apps → “Build from FAH-Git”.",
+  "fahgit_erklaerung": "Optional – only needed if you run your own FAH-Git server. Set up once, works for all projects: FAH-NAS reads projects and branches from FAH-Git and builds them as Docker apps under Apps → “Build from FAH-Git”. The button and the dashboard tile only appear once a connection is set up.",
   "fahgit_laden": "Loading connection …",
   "fahgit_nicht_eingerichtet": "No connection set up yet.",
   "fahgit_ungeprueft": "Connection saved but not checked yet.",

@@ -866,6 +866,7 @@ function baueOberflaeche() {
     knoten.fgListe = el('ul', { class: 'dashboard-spiegelung', role: 'list', hidden: true });
     knoten.fgLink = el('a', { href: ctx.hashFuer('apps', 'fahgit'), text: t('dashboard.fahgit_link') });
     knoten.fgKachel = kachel('fahgit', 'apps', t('dashboard.fahgit'), [knoten.fgWert, knoten.fgNeben, knoten.fgListe, el('p', { class: 'kachel-fuss' }, [knoten.fgLink])]);
+    knoten.fgKachel.hidden = !fahgitSichtbar; // erst mit Verbindung oder Apps aus FAH-Git (fahgitSichtbarkeit)
     raster.appendChild(knoten.fgKachel);
 
     // Gehäuse – Lüfter (Drehzahl, Modus), Temperaturen, LEDs bei UGREEN-Geräten (hardware.status, 19.10.2026)
@@ -898,7 +899,8 @@ function baueOberflaeche() {
   zeigeFreigaben(); zeigeUhr(); zeigeSnaps(); zeigeVerbindungen(); zeigeDocker(); zeigeUpdates(); zeigeLinks(); zeigeChat(); zeigeOffice(); zeigeSchutz(); zeigeOrdnerrechte(); zeigeGehaeuse(); zeigeImporte();
   if (knoten.ereignisse) zeigeEreignisse(null);
   zeigeWeltkarte();
-  standardKacheln = [...raster.children].map((k) => k.dataset.kachel).filter(Boolean);
+  alleKacheln = [...raster.children].map((k) => k.dataset.kachel).filter(Boolean);
+  standardKacheln = alleKacheln.filter((id) => id !== 'fahgit' || fahgitSichtbar);
   layoutAnwenden();
 }
 
@@ -964,7 +966,9 @@ function darstellungGeaendert() {
 // ---------------------------------------------------------------------------------------------------------------------
 
 const LAYOUT_BEREICH = 'uebersicht';
-let standardKacheln = [];     // Kennungen in Aufbau-Reihenfolge
+let standardKacheln = [];     // Kennungen in Aufbau-Reihenfolge (nur die, die gerade angeboten werden)
+let alleKacheln = [];         // alle gebauten Kacheln in Aufbau-Reihenfolge
+let fahgitSichtbar = false;   // Kachel „Apps aus FAH-Git“ nur mit Verbindung/Apps (FAH-Git ist nicht öffentlich, 23.11.2026)
 let layout = null;            // gespeicherte Form (v4 {version, kacheln:[{id,x,y,b,h}], ausgeblendet}) | null = Standard
 let bearbeiten = false;
 let speicherTimer = null;
@@ -1563,7 +1567,23 @@ function zeigeFahgit() {
 async function ladeFahgit() {
   const c = ctx; if (!c || c.rolle !== 'admin') return;
   try { fahgitStand = await c.api('apps.fahgit.stand', {}); } catch (e) { fahgitStand = 'fehler'; if (e && !['E_AGENT', 'E_NICHT_GEFUNDEN', 'E_RECHTE'].includes(e.code)) console.warn('[dashboard] apps.fahgit.stand:', e.message); }
-  if (wurzel && ctx === c) zeigeFahgit();
+  if (wurzel && ctx === c) { fahgitSichtbarkeit(); zeigeFahgit(); }
+}
+
+/**
+ * Kachel „Apps aus FAH-Git“ nur anbieten, wenn eine Verbindung eingerichtet ist oder schon Apps aus FAH-Git laufen
+ * (Betreiber 23.11.2026: FAH-Git ist nicht öffentlich – wer FAH-NAS von GitHub installiert, soll keine Kachel ohne
+ * Gegenstelle sehen). Unklarer Stand (laden/Fehler) ändert nichts.
+ */
+function fahgitSichtbarkeit() {
+  const s = fahgitStand;
+  if (s === null || s === 'fehler' || !knoten.fgKachel || !alleKacheln.length) return;
+  const soll = !!s.verbunden || (Array.isArray(s.apps) && s.apps.length > 0);
+  if (soll === fahgitSichtbar) return;
+  fahgitSichtbar = soll;
+  standardKacheln = alleKacheln.filter((id) => id !== 'fahgit' || fahgitSichtbar);
+  if (!soll) knoten.fgKachel.hidden = true;
+  layoutAnwenden();
 }
 
 function zeigeGehaeuse() {
@@ -3054,7 +3074,7 @@ export default {
     clearTimeout(chatTimer); chatTimer = null; chatUebersicht = null; officeStand = null;
     freigabenStand = null; snapStand = null; verbStand = null; linksStand = null; schutzStand = null; ordnerrechteStand = null; fahgitStand = null; gehaeuseStand = null; importeStand = null; orteStand = null; dockerStand = null; updatesStand = null; dockerAufgabe = null; zuletztGeladen = {};
     zugBeenden(false);
-    bearbeiten = false; clearTimeout(speicherTimer); speicherTimer = null; layout = null; standardKacheln = []; knoten.platzhalter = null;
+    bearbeiten = false; clearTimeout(speicherTimer); speicherTimer = null; layout = null; standardKacheln = []; alleKacheln = []; knoten.platzhalter = null;
     for (const k of Object.keys(knoten)) delete knoten[k];
   },
 };

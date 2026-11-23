@@ -11,6 +11,7 @@
 .ap-reiter[aria-selected="true"] { color: var(--fahnas-akzent, #0b7272); border-bottom-color: var(--fahnas-akzent, #0b7272); }
 .ap-reiter:focus-visible { outline: 2px solid var(--fahnas-fokus, var(--fahnas-akzent, #0b7272)); outline-offset: -2px; }
 .ap-panel[hidden] { display: none; }
+.ap-werkzeuge [hidden] { display: none; } /* „Aus FAH-Git bauen“ ohne Verbindung (Knopf hat sonst display:inline-flex) */
 
 .ap-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 .ap-karte { display: flex; flex-direction: column; gap: 8px; margin: 0; min-width: 0; }
