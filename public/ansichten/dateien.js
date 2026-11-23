@@ -89,6 +89,17 @@ export function artVon(e) {
 }
 
 /** Sortiert Einträge: Ordner zuerst, dann nach Feld (name|groesse|geaendert) auf-/absteigend. */
+/**
+ * Wiedergabeliste ab einer Datei: alle Dateien derselben Art (nur Audio bzw. nur Video) in der angezeigten Reihenfolge.
+ * Gibt {dateien, pos} zurück; pos = Stelle der angeklickten Datei (Ordner-Durchhören ohne jedes Lied anzuklicken).
+ */
+export function wiedergabeliste(liste, start) {
+  const art = artVon(start);
+  const dateien = (liste || []).filter((x) => x && x.art !== 'ordner' && artVon(x) === art);
+  const pos = dateien.findIndex((x) => x.name === start.name);
+  return pos < 0 ? { dateien: [start], pos: 0 } : { dateien, pos };
+}
+
 export function sortiere(liste, feld = 'name', aufsteigend = true) {
   const r = aufsteigend ? 1 : -1;
   const vergleichName = (a, b) => String(a.name).localeCompare(String(b.name), 'de', { numeric: true, sensitivity: 'base' });
@@ -951,7 +962,7 @@ async function vorschau(e) {
     el('button', { class: 'knopf knopf-zweit', type: 'button', onclick: () => { d.schliessen(); infoDialog(e); } }, [symbol('info'), t('dateien.info')]),
     alsTapeteTauglich(e) ? el('button', { class: 'knopf knopf-zweit', type: 'button', title: t('dateien.als_hintergrund_titel'), onclick: () => alsHintergrund(e) }, [symbol('darstellung'), t('dateien.als_hintergrund')]) : null,
   ]);
-  const d = ctx.dialog([behaelter, fuss], { titel: e.name, breit: true, beimSchliessen: () => { for (const u of objektUrls) URL.revokeObjectURL(u); if (cspHoerer) document.removeEventListener('securitypolicyviolation', cspHoerer); for (const m of behaelter.querySelectorAll('video, audio')) { try { m.pause(); m.removeAttribute('src'); m.load(); } catch { /* egal */ } } } });
+  const d = ctx.dialog([behaelter, fuss], { titel: e.name, breit: true, beimSchliessen: () => { for (const u of objektUrls) URL.revokeObjectURL(u); if (cspHoerer) document.removeEventListener('securitypolicyviolation', cspHoerer); for (const m of behaelter.querySelectorAll('video, audio')) { try { m.pause(); m.removeAttribute('src'); m.load(); } catch { /* egal */ } } medienSitzung(null); } });
   const zeigeFehler = (fehler, hinweis) => { behaelter.textContent = ''; behaelter.appendChild(el('div', { class: 'leer' }, [symbol('warnung', 'gross'), el('p', { class: 'leer-titel', text: hinweis || t('dateien.vorschau_fehler') }), fehler ? el('p', { class: 'leer-text', text: ctx.fehlerText(fehler) }) : null])); };
   try {
     if (art === 'bild') {
@@ -981,14 +992,66 @@ async function vorschau(e) {
       behaelter.appendChild(objekt);
     } else if (art === 'video' || art === 'audio') {
       behaelter.textContent = '';
-      const medium = el(art, { controls: true, preload: 'metadata', src: ctx.downloadUrl(freigabe, vollerPfad(e)), 'aria-label': e.name });
-      medium.addEventListener('error', () => zeigeFehler(null, t('dateien.medium_fehler')));
-      behaelter.appendChild(medium);
-      try { await medium.play(); } catch { /* Autoplay verboten – Nutzer klickt */ }
+      medienListe(e, art, behaelter, fuss, d, zeigeFehler);
     } else {
       zeigeFehler(null, t('dateien.keine_vorschau'));
     }
   } catch (f) { zeigeFehler(f); }
+}
+
+/**
+ * Audio/Video als Wiedergabeliste (Betreiber 23.11.): ab der angeklickten Datei laufen alle weiteren Medien derselben Art
+ * im Ordner (angezeigte Reihenfolge) von selbst weiter. Zurück/Weiter-Knöpfe, Zähler „3 / 12“, Titel und Download folgen
+ * der laufenden Datei; nicht abspielbare Dateien werden übersprungen. Sperrbildschirm/Medientasten über die Media Session.
+ */
+function medienListe(start, art, behaelter, fuss, d, zeigeFehler) {
+  const { dateien, pos: anfang } = wiedergabeliste(sichtbareEintraege(), start);
+  let pos = anfang;
+  let fehlerInFolge = 0;
+  const medium = el(art, { controls: true, preload: 'metadata', 'aria-label': start.name });
+  const titel = d.element.querySelector('.dialog-titel');
+  const download = fuss.querySelector('a[download]');
+  const zaehler = el('span', { class: 'dateien-medien-zaehler schwach klein' });
+  const zurueck = el('button', { class: 'knopf knopf-zweit', type: 'button', title: t('dateien.medien_zurueck'), 'aria-label': t('dateien.medien_zurueck'), onclick: () => wechseln(pos - 1) }, [t('dateien.medien_zurueck_kurz')]);
+  const weiter = el('button', { class: 'knopf knopf-zweit', type: 'button', title: t('dateien.medien_weiter'), 'aria-label': t('dateien.medien_weiter'), onclick: () => wechseln(pos + 1) }, [t('dateien.medien_weiter_kurz')]);
+  const leiste = dateien.length > 1 ? el('div', { class: 'dateien-medien-leiste' }, [zurueck, zaehler, weiter]) : null;
+  const ordner = pfad ? pfad.split('/').filter(Boolean).pop() : freigabe;
+  function wechseln(neu, { spielen = true } = {}) {
+    if (neu < 0 || neu >= dateien.length) return;
+    pos = neu;
+    const x = dateien[pos];
+    medium.src = ctx.downloadUrl(freigabe, vollerPfad(x));
+    medium.setAttribute('aria-label', x.name);
+    if (titel) titel.textContent = x.name;
+    if (download) { download.href = ctx.downloadUrl(freigabe, vollerPfad(x)); download.setAttribute('download', x.name); }
+    zaehler.textContent = `${pos + 1} / ${dateien.length}`;
+    zurueck.disabled = pos === 0; weiter.disabled = pos === dateien.length - 1;
+    medienSitzung({ titel: x.name, ordner, zurueck: pos > 0 ? () => wechseln(pos - 1) : null, weiter: pos < dateien.length - 1 ? () => wechseln(pos + 1) : null });
+    if (spielen) medium.play().catch(() => { /* Autoplay verboten – Nutzer klickt */ });
+  }
+  medium.addEventListener('ended', () => { fehlerInFolge = 0; wechseln(pos + 1); });
+  medium.addEventListener('playing', () => { fehlerInFolge = 0; });
+  medium.addEventListener('error', () => {
+    if (!medium.getAttribute('src')) return;                             // beim Schließen geleert
+    if (dateien.length === 1) { zeigeFehler(null, t('dateien.medium_fehler')); return; }
+    fehlerInFolge += 1;                                                  // Liste: Player bleibt, Zurück/Weiter gehen weiter
+    if (pos < dateien.length - 1 && fehlerInFolge < dateien.length) { ctx.melden(`${dateien[pos].name}: ${t('dateien.medium_uebersprungen')}`, 'warnung', 3000); wechseln(pos + 1); }
+    else ctx.melden(`${dateien[pos].name}: ${t('dateien.medium_fehler')}`, 'warnung', 5000);
+  });
+  behaelter.appendChild(medium);
+  if (leiste) fuss.insertBefore(leiste, fuss.firstChild);
+  wechseln(pos);
+}
+
+/** Medientasten/Sperrbildschirm (Handy, Kopfhörer): Titel und Vor/Zurück; null = alles lösen. */
+function medienSitzung(info) {
+  const ms = typeof navigator !== 'undefined' ? navigator.mediaSession : null;
+  if (!ms) return;
+  try {
+    ms.metadata = info && typeof MediaMetadata === 'function' ? new MediaMetadata({ title: info.titel, album: info.ordner || '' }) : null;
+    ms.setActionHandler('previoustrack', info && info.zurueck ? info.zurueck : null);
+    ms.setActionHandler('nexttrack', info && info.weiter ? info.weiter : null);
+  } catch { /* ältere Browser */ }
 }
 
 /**

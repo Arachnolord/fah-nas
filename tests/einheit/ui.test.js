@@ -453,7 +453,7 @@ test('ui: Dashboard – Messwerte verschiedener Formen werden normalisiert, Kurv
 
 test('ui: Dateien – Art-Erkennung, Sortierung (Ordner zuerst, natürlich), Pfade', async () => {
   domAttrappe();
-  const { artVon, sortiere, verbinde } = await import(pathToFileURL(path.join(PUBLIC, 'ansichten', 'dateien.js')).href);
+  const { artVon, sortiere, verbinde, wiedergabeliste } = await import(pathToFileURL(path.join(PUBLIC, 'ansichten', 'dateien.js')).href);
   assert.equal(artVon({ name: 'x', art: 'ordner' }), 'ordner');
   assert.equal(artVon({ name: 'Foto.JPG', art: 'datei' }), 'bild');
   assert.equal(artVon({ name: 'x.bin', art: 'datei', mime: 'image/png' }), 'bild');
@@ -472,6 +472,14 @@ test('ui: Dateien – Art-Erkennung, Sortierung (Ordner zuerst, natürlich), Pfa
     { name: 'Aa', art: 'ordner', geaendert: '2026-01-05T00:00:00Z' },
   ];
   assert.deepEqual(sortiere(liste, 'name', true).map((e) => e.name), ['Aa', 'zz', 'b.txt', 'Datei 2.txt', 'Datei 10.txt']);
+  // Wiedergabeliste (23.11.): nur gleiche Art, angezeigte Reihenfolge, Start an der geklickten Datei
+  const musik = sortiere([{ name: '02 B.mp3', art: 'datei' }, { name: 'cover.jpg', art: 'datei' }, { name: '10 J.flac', art: 'datei' },
+    { name: 'Bonus', art: 'ordner' }, { name: '01 A.mp3', art: 'datei' }, { name: 'clip.mp4', art: 'datei' }], 'name', true);
+  const wl = wiedergabeliste(musik, { name: '02 B.mp3', art: 'datei' });
+  assert.deepEqual(wl.dateien.map((e) => e.name), ['01 A.mp3', '02 B.mp3', '10 J.flac']);
+  assert.equal(wl.pos, 1);
+  assert.deepEqual(wiedergabeliste(musik, { name: 'clip.mp4', art: 'datei' }).dateien.map((e) => e.name), ['clip.mp4']);
+  assert.deepEqual(wiedergabeliste([], { name: 'x.mp3', art: 'datei' }), { dateien: [{ name: 'x.mp3', art: 'datei' }], pos: 0 });
   assert.deepEqual(sortiere(liste, 'name', false).map((e) => e.name), ['zz', 'Aa', 'Datei 10.txt', 'Datei 2.txt', 'b.txt']);
   assert.deepEqual(sortiere(liste, 'groesse', true).map((e) => e.name), ['Aa', 'zz', 'Datei 10.txt', 'b.txt', 'Datei 2.txt']);
   assert.deepEqual(sortiere(liste, 'geaendert', false).map((e) => e.name), ['Aa', 'zz', 'Datei 10.txt', 'b.txt', 'Datei 2.txt']);
