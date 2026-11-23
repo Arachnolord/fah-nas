@@ -957,9 +957,11 @@ async function vorschau(e) {
   const behaelter = el('div', { class: 'dateien-vorschau' }, [el('div', { class: 'laden' }, [el('span', { class: 'laden-kreis' }), t('rahmen.laden')])]);
   const objektUrls = [];
   let cspHoerer = null;
+  let aktuell = e; // in der Wiedergabeliste die gerade laufende Datei
   const fuss = el('div', { class: 'dateien-vorschau-fuss' }, [
     el('a', { class: 'knopf knopf-zweit', href: ctx.downloadUrl(freigabe, vollerPfad(e)), download: e.name }, [symbol('herunterladen'), t('dateien.herunterladen')]),
-    el('button', { class: 'knopf knopf-zweit', type: 'button', onclick: () => { d.schliessen(); infoDialog(e); } }, [symbol('info'), t('dateien.info')]),
+    // Info legt sich über die Vorschau (gestapelter Dialog) – die Wiedergabe läuft weiter (Betreiber 23.11.)
+    el('button', { class: 'knopf knopf-zweit', type: 'button', onclick: () => infoDialog(aktuell) }, [symbol('info'), t('dateien.info')]),
     alsTapeteTauglich(e) ? el('button', { class: 'knopf knopf-zweit', type: 'button', title: t('dateien.als_hintergrund_titel'), onclick: () => alsHintergrund(e) }, [symbol('darstellung'), t('dateien.als_hintergrund')]) : null,
   ]);
   const d = ctx.dialog([behaelter, fuss], { titel: e.name, breit: true, beimSchliessen: () => { for (const u of objektUrls) URL.revokeObjectURL(u); if (cspHoerer) document.removeEventListener('securitypolicyviolation', cspHoerer); for (const m of behaelter.querySelectorAll('video, audio')) { try { m.pause(); m.removeAttribute('src'); m.load(); } catch { /* egal */ } } medienSitzung(null); } });
@@ -992,7 +994,7 @@ async function vorschau(e) {
       behaelter.appendChild(objekt);
     } else if (art === 'video' || art === 'audio') {
       behaelter.textContent = '';
-      medienListe(e, art, behaelter, fuss, d, zeigeFehler);
+      medienListe(e, art, behaelter, fuss, d, zeigeFehler, (x) => { aktuell = x; });
     } else {
       zeigeFehler(null, t('dateien.keine_vorschau'));
     }
@@ -1004,7 +1006,7 @@ async function vorschau(e) {
  * im Ordner (angezeigte Reihenfolge) von selbst weiter. Zurück/Weiter-Knöpfe, Zähler „3 / 12“, Titel und Download folgen
  * der laufenden Datei; nicht abspielbare Dateien werden übersprungen. Sperrbildschirm/Medientasten über die Media Session.
  */
-function medienListe(start, art, behaelter, fuss, d, zeigeFehler) {
+function medienListe(start, art, behaelter, fuss, d, zeigeFehler, beiWechsel) {
   const { dateien, pos: anfang } = wiedergabeliste(sichtbareEintraege(), start);
   let pos = anfang;
   let fehlerInFolge = 0;
@@ -1020,6 +1022,7 @@ function medienListe(start, art, behaelter, fuss, d, zeigeFehler) {
     if (neu < 0 || neu >= dateien.length) return;
     pos = neu;
     const x = dateien[pos];
+    if (beiWechsel) beiWechsel(x);
     medium.src = ctx.downloadUrl(freigabe, vollerPfad(x));
     medium.setAttribute('aria-label', x.name);
     if (titel) titel.textContent = x.name;
