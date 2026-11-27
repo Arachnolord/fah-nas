@@ -1,6 +1,0 @@
-# ============================================================================
-# Erdacht und programmiert von Fabian Hammer, Deutschland.
-# (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
-# ============================================================================
-# cloud-init NoCloud: Kennung der Instanz (Pflichtdatei neben user-data).
-instance-id: fahnas-installer

@@ -1,8 +1,0 @@
-/* ============================================================================
-   Erdacht und programmiert von Fabian Hammer, Deutschland.
-   (c) 2026 Fabian Hammer - Alle Rechte vorbehalten. Geistiges Eigentum.
-   ============================================================================
-   Ersteinrichtung: nutzt den Stil der Anmeldung (anmeldung.css wird von der Ansicht selbst nachgeladen);
-   hier nur Ergänzungen. */
-
-.an-karte.an-breit .an-erklaerung { font-size: 0.95rem; line-height: 1.45; }
