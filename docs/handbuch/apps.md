@@ -18,7 +18,7 @@ Unter **Apps → Katalog** findest du drei Quellen:
 
 | Quelle | Was dahinter steckt |
 |---|---|
-| **Eingebaut** | 35 geprüfte Vorlagen, die mit FAH-NAS ausgeliefert werden – inklusive der FAH-Apps (Sicherung, Adblock, Medienconverter, Downloader, Passwortwechsel). Bei jeder Vorlage wurden Image, Ports, Ordner und Pflichteinstellungen gegen die offizielle Dokumentation geprüft. |
+| **Eingebaut** | Geprüfte Vorlagen, die mit FAH-NAS ausgeliefert werden (in eigenen Installationen zusätzlich die FAH-Apps wie Sicherung, Adblock, Medienconverter, Downloader, Passwortwechsel). Bei jeder Vorlage wurden Image, Ports, Ordner und Pflichteinstellungen gegen die offizielle Dokumentation geprüft. |
 | **Unraid** | Der Feed der Unraid Community Applications mit tausenden Vorlagen. Wird auf Knopfdruck geladen und in eine FAH-NAS-Vorlage umgewandelt (Abschnitt 4). |
 | **Eigen** | Vorlagen, die du selbst importiert hast (Unraid-XML einfügen oder Link angeben). |
 

@@ -10,7 +10,11 @@
 # selbst, es braucht keine Registry. ZIP-Ordner: $FAHNAS_APP_ZIPS (Standard ~/claude/NEUE ZIPs, samt Unterordnern).
 # Ortsdaten: geo/ (laender.json aus dem Git + dbip-country-lite.mmdb, nicht im Git) kommt ins Release; die Länder-
 # Datenbank holt tools/geo_holen.mjs bei Bedarf (fehlt, unlesbar oder älter als 45 Tage) – --ohne-geo-holen lässt das aus.
-# Aufruf: tools/build_release.sh [--ausgabe <ordner>] [--ohne-app-quellen] [--ohne-geo-holen]
+# --oeffentlich (27.11.2026): Release für die öffentliche Installer-ISO – ohne eigene Apps (Vorlagen mit release_zip bzw.
+# katalog/fah-*.json, keine App-Quellen) und bereinigt wie der „Öffentliche Stand“ von FAH-Git (tools/oeffentlich_bereinigen.mjs,
+# Regeln privat außerhalb des Repos: $FAHNAS_OEFFENTLICH_REGELN, Standard ~/.config/fah-oeffentlich/regeln.json). Bricht ab,
+# sobald nach der Bereinigung noch Verbotenes drinsteckt. Ergebnis: dist/fahnas_release_oeffentlich.tar.gz (+ .sha256).
+# Aufruf: tools/build_release.sh [--ausgabe <ordner>] [--ohne-app-quellen] [--ohne-geo-holen] [--oeffentlich]
 
 set -euo pipefail
 
@@ -19,12 +23,14 @@ AUSGABE="$WURZEL/dist"
 APP_ZIPS="${FAHNAS_APP_ZIPS:-$HOME/claude/NEUE ZIPs}"
 OHNE_APP_QUELLEN=0
 OHNE_GEO_HOLEN=0
+OEFFENTLICH=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --ausgabe) AUSGABE="$2"; shift 2 ;;
     --ohne-app-quellen) OHNE_APP_QUELLEN=1; shift ;;
     --ohne-geo-holen) OHNE_GEO_HOLEN=1; shift ;;
-    -h|--help|hilfe) echo "Aufruf: $0 [--ausgabe <ordner>] [--ohne-app-quellen] [--ohne-geo-holen]"; exit 0 ;;
+    --oeffentlich) OEFFENTLICH=1; OHNE_APP_QUELLEN=1; shift ;;
+    -h|--help|hilfe) echo "Aufruf: $0 [--ausgabe <ordner>] [--ohne-app-quellen] [--ohne-geo-holen] [--oeffentlich]"; exit 0 ;;
     *) echo "Unbekannte Option: $1" >&2; exit 2 ;;
   esac
 done
@@ -141,8 +147,28 @@ for e in "${INHALT[@]}"; do
 done
 [ -d src ] && [ -f package.json ] || { echo "src/ oder package.json fehlt – falsches Verzeichnis?" >&2; exit 1; }
 
+if [ "$OEFFENTLICH" = "1" ]; then
+  command -v node >/dev/null || { echo "node fehlt (öffentliche Bereinigung)" >&2; exit 1; }
+  # Eigene Apps raus: Vorlagen mit bauen.release_zip und katalog/fah-*.json (wie im GitHub-Spiegel weggelassen)
+  node -e '
+    const fs = require("fs"), path = require("path");
+    const dir = process.argv[1]; const weg = [];
+    for (const n of fs.readdirSync(dir).filter((n) => n.endsWith(".json"))) {
+      let v = null; try { v = JSON.parse(fs.readFileSync(path.join(dir, n), "utf8")); } catch {}
+      if (/^fah-/i.test(n) || (v && v.bauen && v.bauen.release_zip)) { fs.rmSync(path.join(dir, n)); weg.push(n); }
+    }
+    console.log("  öffentlich: eigene Apps entfernt (" + (weg.join(", ") || "keine") + ")");
+  ' "$BEREIT/katalog"
+  rm -rf "$BEREIT/katalog/quellen"
+  # Persönliches Umstiegsprotokoll (Platten, Konten des eigenen NAS) gehört nicht in die öffentliche Fassung
+  rm -f "$BEREIT/docs/handbuch/umstieg-ugos.md"
+  node "$WURZEL/tools/oeffentlich_bereinigen.mjs" --regeln "${FAHNAS_OEFFENTLICH_REGELN:-$HOME/.config/fah-oeffentlich/regeln.json}" "$BEREIT" \
+    || { echo "FEHLER: öffentliche Bereinigung fehlgeschlagen – kein öffentliches Release" >&2; exit 1; }
+fi
+
 mkdir -p "$AUSGABE"
-NAME="fahnas_release-$VERSION.tar.gz"
+BASIS="fahnas_release"; [ "$OEFFENTLICH" = "1" ] && BASIS="fahnas_release_oeffentlich"
+NAME="$BASIS-$VERSION.tar.gz"
 ZIEL="$AUSGABE/$NAME"
 
 # tar-Variante erkennen: GNU tar (Linux) oder bsdtar (macOS) – Besitzer auf root normieren
@@ -168,13 +194,13 @@ else
   (cd "$AUSGABE" && shasum -a 256 "$NAME" > "$NAME.sha256")
 fi
 
-cp "$ZIEL" "$AUSGABE/fahnas_release.tar.gz"
+cp "$ZIEL" "$AUSGABE/$BASIS.tar.gz"
 SUMME="$(cut -d' ' -f1 "$ZIEL.sha256")"
-printf '%s  fahnas_release.tar.gz\n' "$SUMME" > "$AUSGABE/fahnas_release.tar.gz.sha256"
+printf '%s  %s\n' "$SUMME" "$BASIS.tar.gz" > "$AUSGABE/$BASIS.tar.gz.sha256"
 
 GROESSE="$(du -k "$ZIEL" | cut -f1)"
 echo "Release $VERSION gebaut:"
 echo "  $ZIEL (${GROESSE} KB)"
 echo "  $ZIEL.sha256  ($SUMME)"
-echo "  $AUSGABE/fahnas_release.tar.gz (+ .sha256)"
+echo "  $AUSGABE/$BASIS.tar.gz (+ .sha256)"
 echo "Auf dem NAS einspielen: fahnas update fahnas_release.tar.gz"

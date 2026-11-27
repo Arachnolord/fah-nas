@@ -10,8 +10,15 @@
 #   UBUNTU_ISO=<datei>   vorhandene Ubuntu-ISO benutzen (sonst: neueste 26.04.x aus iso/cache/ oder Download)
 #   OHNE_PRUEFUNG=1      user-data-Prüfung überspringen (nur zum Ausprobieren)
 #   NUR_PRUEFEN=1        Probelauf: alle Vorprüfungen (Archiv, Skripte, user-data, Ubuntu-ISO-Prüfsumme, grub-btrfs), kein ISO-Bau
+#   OEFFENTLICH=1        öffentliche Installer-ISO (27.11.2026) für GitHub: Release aus dist/fahnas_release_oeffentlich.tar.gz
+#                        (tools/build_release.sh --oeffentlich), eigene Teile bereinigt wie der „Öffentliche Stand“ von
+#                        FAH-Git (tools/oeffentlich_bereinigen.mjs, Regeln privat), OHNE pool/restricted (NVIDIA-Treiber,
+#                        930 MB – der Autoinstall sucht keine Treiber; nachinstallieren: System → Grafikkarte → „NVIDIA
+#                        einrichten“, aus dem Internet). Muss unter 2 GiB bleiben (Grenze je Datei bei GitHub). Daneben ein
+#                        Prüfvermerk <iso>.pruefung.json (Größe + SHA-256) – FAH-Git veröffentlicht eine ISO nur mit passendem Vermerk.
 #
-# Ergebnis: iso/aus/fahnas-<version>-<datum>-ubuntu26.04-amd64.iso (+ .sha256)
+# Ergebnis: iso/aus/fahnas-<version>-<datum>-ubuntu26.04-amd64.iso (+ .sha256); öffentlich: iso/aus/FAH-NAS-Installer.iso
+# (+ .sha256 + .pruefung.json)
 # Vorgehen wie Ubuntus Anleitung „custom autoinstall ISO“: Original auspacken, nocloud/ + fahnas/ + grub.cfg einsetzen,
 # md5sum.txt erneuern, mit den ORIGINALEN Boot-Images (BIOS + UEFI, Secure Boot bleibt intakt) neu zusammensetzen.
 # Fallen (aus dem allinone-Bau übernommen): xorriso ≥ 1.5 nennt die Boot-Teile mbr_code_grub2.img und gpt_part2_efi.img;
@@ -19,13 +26,20 @@
 set -euo pipefail
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WURZEL="$(dirname "$HIER")"
-ARCHIV="${1:-$WURZEL/dist/fahnas_release.tar.gz}"
+OEFFENTLICH="${OEFFENTLICH:-0}"
+if [ "$OEFFENTLICH" = "1" ]; then
+    # Öffentlich NIE mit einem anderen Archiv (Sicherheitsprüfung 27.11.: sonst ginge das private Release mit Vermerk raus)
+    [ -z "${1:-}" ] || { echo "FEHLER: OEFFENTLICH=1 nimmt immer dist/fahnas_release_oeffentlich.tar.gz – kein eigenes Archiv angeben" >&2; exit 1; }
+    ARCHIV="$WURZEL/dist/fahnas_release_oeffentlich.tar.gz"
+else ARCHIV="${1:-$WURZEL/dist/fahnas_release.tar.gz}"; fi
 REL="26.04"
 VOLUMEN_ID="FAH-NAS Installer"
 CACHE="$HIER/cache"; ARBEIT="$HIER/arbeit"; AUS="$HIER/aus"
 mkdir -p "$CACHE" "$AUS"
 
 fehler() { echo "FEHLER: $*" >&2; exit 1; }
+# Öffentlich: alte Ausgabe samt Prüfvermerk zuerst weg – ein Vermerk entsteht nur, wenn dieser Lauf ganz durchkommt
+[ "$OEFFENTLICH" = "1" ] && rm -f "$AUS/FAH-NAS-Installer.iso" "$AUS/FAH-NAS-Installer.iso.sha256" "$AUS/FAH-NAS-Installer.iso.pruefung.json"
 
 # ── 0) Voraussetzungen
 [ -s "$ARCHIV" ] || fehler "Release-Archiv fehlt: $ARCHIV – erst tools/build_release.sh ausführen (erzeugt dist/fahnas_release.tar.gz + .sha256)"
@@ -60,6 +74,10 @@ grep -q 'autoinstall ds=nocloud\\;s=/cdrom/nocloud/' "$HIER/grub/grub.cfg" || fe
 if [ -n "${UBUNTU_ISO:-}" ]; then
     ISO_PFAD="$UBUNTU_ISO"; ISO_NAME="$(basename "$ISO_PFAD")"
     [ -s "$ISO_PFAD" ] || fehler "UBUNTU_ISO=$ISO_PFAD existiert nicht"
+    if [ "$OEFFENTLICH" = "1" ]; then   # öffentlich nur auf einer ORIGINAL-Ubuntu-ISO (nie auf einer früheren FAH-NAS-ISO)
+        SOLL="$(grep " \*$ISO_NAME\$" "$CACHE/SHA256SUMS" 2>/dev/null | cut -d' ' -f1)"
+        [ -n "$SOLL" ] && [ "$SOLL" = "$($SHA "$ISO_PFAD" | cut -d' ' -f1)" ] || fehler "OEFFENTLICH=1: UBUNTU_ISO muss eine Original-Ubuntu-ISO aus SHA256SUMS sein"
+    fi
 else
     ISO_NAME="$(ls "$CACHE" 2>/dev/null | grep -E "^ubuntu-$REL(\.[0-9]+)?-live-server-amd64\.iso$" | sort -V | tail -1 || true)"
     if [ -z "$ISO_NAME" ]; then
@@ -93,6 +111,21 @@ if [ -s "$GB_PFAD" ]; then
     echo "OK: $GRUB_BTRFS_DATEI, Prüfsumme geprüft."
 fi
 
+# ── 1c) Öffentlich: Grundlage ist wirklich Ubuntu, das Release ist wirklich die öffentliche Fassung (entpackt geprüft)
+if [ "$OEFFENTLICH" = "1" ]; then
+    command -v node >/dev/null || fehler "node fehlt (öffentliche Prüfung)"
+    xorriso -indev "$ISO_PFAD" -pvd_info 2>/dev/null | grep -qi "Volume Id *: *FAH-NAS" && fehler "OEFFENTLICH=1: Grundlage ist eine FAH-NAS-ISO – nur Original-Ubuntu"
+    REGELN="${FAHNAS_OEFFENTLICH_REGELN:-$HOME/.config/fah-oeffentlich/regeln.json}"
+    PRUEF="$(mktemp -d "${TMPDIR:-/tmp}/fahnas-oeff.XXXXXX")"
+    tar -xzf "$ARCHIV" -C "$PRUEF" || { rm -rf "$PRUEF"; fehler "Release-Archiv nicht entpackbar"; }
+    { [ ! -e "$PRUEF/katalog/quellen" ] && [ -z "$(ls "$PRUEF"/katalog/fah-*.json 2>/dev/null)" ] && [ ! -e "$PRUEF/docs/handbuch/umstieg-ugos.md" ]; } \
+        || { rm -rf "$PRUEF"; fehler "Release enthält eigene Apps oder Persönliches – nur tools/build_release.sh --oeffentlich verwenden"; }
+    node -e 'const fs=require("fs"),p=require("path");const d=process.argv[1];for(const n of fs.readdirSync(d).filter((n)=>n.endsWith(".json"))){const v=JSON.parse(fs.readFileSync(p.join(d,n),"utf8"));if(v&&v.bauen&&v.bauen.release_zip){console.error("eigene App: "+n);process.exit(1);}}' "$PRUEF/katalog" \
+        || { rm -rf "$PRUEF"; fehler "Release enthält eigene Apps"; }
+    node "$WURZEL/tools/oeffentlich_bereinigen.mjs" --regeln "$REGELN" --nur-pruefen "$PRUEF" || { rm -rf "$PRUEF"; fehler "Release besteht die öffentliche Prüfung nicht"; }
+    rm -rf "$PRUEF"
+fi
+
 if [ "${NUR_PRUEFEN:-0}" = "1" ]; then
     echo "Probelauf beendet: alle Vorprüfungen bestanden (Version $VERSION, $ISO_NAME). Ohne NUR_PRUEFEN=1 wird jetzt das ISO gebaut."
     exit 0
@@ -110,6 +143,8 @@ BIOS_IMG="$ARBEIT/boot/mbr_code_grub2.img"; EFI_IMG="$ARBEIT/boot/gpt_part2_efi.
 [ -f "$ARBEIT/iso/casper/vmlinuz" ] && [ -f "$ARBEIT/iso/casper/initrd" ] && [ -f "$ARBEIT/iso/boot/grub/i386-pc/eltorito.img" ] || fehler "unerwarteter ISO-Aufbau (casper/vmlinuz, casper/initrd oder eltorito.img fehlt)"
 
 # ── 3) Eigene Teile einsetzen: nocloud/ (Autoinstall), fahnas/ (Release + Erststart-Paket), grub.cfg
+# Immer frisch: dient eine frühere FAH-NAS-ISO als Grundlage (UBUNTU_ISO=…), dürfen ihre alten Teile nicht mitwandern
+rm -rf "$ARBEIT/iso/nocloud" "$ARBEIT/iso/fahnas"
 mkdir -p "$ARBEIT/iso/nocloud" "$ARBEIT/iso/fahnas/samba" "$ARBEIT/iso/fahnas/nftables"
 cp "$HIER/nocloud/user-data" "$HIER/nocloud/meta-data" "$ARBEIT/iso/nocloud/"
 cp "$ARCHIV" "$ARBEIT/iso/fahnas/fahnas_release.tar.gz"
@@ -127,6 +162,20 @@ chmod 755 "$ARBEIT/iso/fahnas/"*.sh "$ARBEIT/iso/fahnas/platte_waehlen.py" "$ARB
 cp "$HIER/grub/grub.cfg" "$ARBEIT/iso/boot/grub/grub.cfg"
 # loopback.cfg (Start des ISO als Datei aus einem GRUB heraus): gleiche Einträge, plus iso-scan/filename
 sed 's|/casper/vmlinuz |/casper/vmlinuz iso-scan/filename=${iso_path} |' "$HIER/grub/grub.cfg" > "$ARBEIT/iso/boot/grub/loopback.cfg"
+# Öffentliche ISO: eigene Teile bereinigen (wie der GitHub-Spiegel) und die NVIDIA-Treiber aus dem Paketpool nehmen
+if [ "$OEFFENTLICH" = "1" ]; then
+    command -v node >/dev/null || fehler "node fehlt (öffentliche Bereinigung)"
+    ERLAUBT=(--erlaubt "$(cut -d' ' -f1 "$ARCHIV.sha256")")          # Release: oben entpackt geprüft
+    [ -s "$GB_PFAD" ] && ERLAUBT+=(--erlaubt "$GRUB_BTRFS_SHA256")    # grub-btrfs: Fremdarchiv mit fester Prüfsumme (quellen.env)
+    node "$WURZEL/tools/oeffentlich_bereinigen.mjs" --regeln "$REGELN" "${ERLAUBT[@]}" \
+        "$ARBEIT/iso/nocloud" "$ARBEIT/iso/fahnas" "$ARBEIT/iso/boot/grub/grub.cfg" "$ARBEIT/iso/boot/grub/loopback.cfg" \
+        || fehler "öffentliche Bereinigung fehlgeschlagen – keine öffentliche ISO"
+    # Bereinigte Kopien noch einmal prüfen (eine Ersetzung darf YAML oder Skripte nicht beschädigen)
+    node "$HIER/werkzeuge/autoinstall_pruefen.mjs" "$ARBEIT/iso/nocloud/user-data" "$HIER/autoinstall-schema.json" || fehler "bereinigte user-data ungültig"
+    for s in "$ARBEIT"/iso/fahnas/*.sh; do bash -n "$s" || fehler "bereinigtes Skript fehlerhaft: $(basename "$s")"; done
+    for s in "$ARBEIT"/iso/fahnas/*.py; do python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "$s" || fehler "bereinigtes Python fehlerhaft: $(basename "$s")"; done
+    [ -d "$ARBEIT/iso/pool/restricted" ] && { echo "→ Entferne pool/restricted ($(du -sh "$ARBEIT/iso/pool/restricted" | cut -f1), nur NVIDIA-Treiber)"; rm -rf "$ARBEIT/iso/pool/restricted"; }
+fi
 # md5sum.txt erneuern (Format wie im Original: "<md5>  ./pfad"), damit die Integritätsprüfung des Mediums stimmt
 ( cd "$ARBEIT/iso" && python3 - <<'PY'
 import hashlib, os
@@ -149,6 +198,7 @@ PY
 # ── 4) ISO zusammensetzen (BIOS + UEFI, hybrid, GPT-Anhang wie das Original – Optionen aus xorriso -report_el_torito as_mkisofs)
 STEMPEL="$(date +%Y%m%d)"
 AUS_ISO="$AUS/fahnas-$VERSION-$STEMPEL-ubuntu$REL-amd64.iso"
+[ "$OEFFENTLICH" = "1" ] && AUS_ISO="$AUS/FAH-NAS-Installer.iso"
 echo "→ Baue $AUS_ISO ..."
 xorriso -as mkisofs -r -V "$VOLUMEN_ID" -o "$AUS_ISO" \
   --grub2-mbr "$BIOS_IMG" --protective-msdos-label -partition_cyl_align off -partition_offset 16 --mbr-force-bootable \
@@ -172,5 +222,14 @@ for p in /nocloud/user-data /nocloud/meta-data /fahnas/fahnas_release.tar.gz /fa
 done
 [ -s "$GB_PFAD" ] && { xorriso -indev "$AUS_ISO" -find "/fahnas/$GRUB_BTRFS_DATEI" -type f >/dev/null 2>&1 || fehler "/fahnas/$GRUB_BTRFS_DATEI fehlt im ISO"; }
 rm -rf "$ARBEIT"
+if [ "$OEFFENTLICH" = "1" ]; then
+    GROESSE="$(wc -c < "$AUS_ISO" | tr -d ' ')"
+    [ "$GROESSE" -lt 2147483648 ] || fehler "öffentliche ISO ist $GROESSE Byte – GitHub nimmt je Datei höchstens 2 GiB"
+    SUMME="$(cut -d' ' -f1 "$AUS_ISO.sha256")"
+    # Prüfvermerk: FAH-Git veröffentlicht eine Nicht-ZIP nur, wenn Größe und SHA-256 hiermit übereinstimmen
+    printf '{"datei":"%s","groesse":%s,"sha256":"%s","version":"%s","erstellt":"%s","werkzeug":"iso/build_iso.sh OEFFENTLICH=1","pruefungen":["Release ohne eigene Apps (build_release.sh --oeffentlich)","Bereinigung wie Öffentlicher Stand von FAH-Git, 0 Funde","ohne pool/restricted"]}\n' \
+        "$(basename "$AUS_ISO")" "$GROESSE" "$SUMME" "$VERSION" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$AUS_ISO.pruefung.json"
+    echo "Prüfvermerk: $AUS_ISO.pruefung.json"
+fi
 echo "OK: $(du -h "$AUS_ISO" | cut -f1 | tr -d ' ')  $AUS_ISO"
 cat "$AUS_ISO.sha256"
