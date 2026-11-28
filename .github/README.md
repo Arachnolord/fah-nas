@@ -13,15 +13,33 @@ Alle Versionen: [Releases](https://github.com/Arachnolord/fah-nas/releases) · f
 
 ## So sieht es aus
 
-*Aufgenommen mit erfundenen Beispieldaten (Nutzer „alex“, „kim“, „sam“, freie Blender-Filme).*
+*Aufgenommen mit erfundenen Beispieldaten (Konto „max“ = Max Mustermann, Nutzer „alex“, „kim“, „sam“, freie Blender-Filme, Demo-Musik).*
 
-![Übersicht – Systemwerte live, Handlungsbedarf, Dienste](../docs/screenshots/1-uebersicht.png)
+**Übersicht** – oben steht, was zu tun ist; darunter laufen CPU je Kern, Arbeitsspeicher, Netz, Temperatur und die Belegung von System- und Datenplatte live mit.
 
-| Dateien | Freigaben |
-|---|---|
-| ![Dateien](../docs/screenshots/2-dateien.png) | ![Freigaben](../docs/screenshots/3-freigaben.png) |
-| **Nutzer, Rollen, 2FA** | **App-Katalog (Docker)** |
-| ![Nutzer](../docs/screenshots/4-nutzer.png) | ![App-Katalog](../docs/screenshots/5-apps-katalog.png) |
+![Übersicht – Handlungsbedarf und Systemwerte live](../docs/screenshots/1-uebersicht.png)
+
+**Dateien** – der Dateimanager im Browser mit Hochladen (auch ganze Ordner), Papierkorb, Ordnerrechten und Listen- oder Kachelansicht.
+
+![Dateimanager](../docs/screenshots/2-dateien.png)
+
+**Wiedergabeliste** – Musik und Videos laufen ab der angeklickten Datei durch den ganzen Ordner, mit Zurück/Weiter und Zähler; „Info“ öffnet sich darüber, ohne die Wiedergabe anzuhalten.
+
+![Wiedergabeliste im Musikordner](../docs/screenshots/7-wiedergabeliste.png)
+
+**Freigaben** – Ordner fürs Netz (SMB, auch als Time-Machine-Ziel) mit Belegung, Speicherort und Lese-/Schreibrechten je Nutzer.
+
+![Freigaben](../docs/screenshots/3-freigaben.png)
+
+**Nutzer** – Konten und Gruppen mit Rollen, Zwei-Faktor-Anmeldung, angemeldeten Geräten und automatischem Abmelden.
+
+![Nutzer, Rollen, 2FA](../docs/screenshots/4-nutzer.png)
+
+**Apps** – der Katalog installiert Docker-Apps per Klick: geprüfte eingebaute Vorlagen, der Unraid-Katalog, eigene Compose-Apps oder eine App als ZIP.
+
+![App-Katalog](../docs/screenshots/5-apps-katalog.png)
+
+**Am Handy** – dieselbe Oberfläche, schmal gesetzt, die Bereiche liegen unten als Leiste.
 
 <img src="../docs/screenshots/6-handy.png" alt="FAH-NAS am Handy" width="260">
 
